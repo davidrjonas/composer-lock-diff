@@ -1,54 +1,88 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env php
+<?php
 
-use strict;
-use List::Util qw(max);
+$prod = diff('packages');
+$dev = diff('packages-dev');
 
-my $JQ_FILTER = "jq -r '.packages[] | \"\\(.name) \\(.version)\"'";
-my $JQ_FILTER_DEV = "sed 's/packages-dev/packages_dev/g' | jq -r '.packages_dev[] | \"\\(.name) \\(.version)\"'";
+if (hasOpt('json')) {
+    $opts = (hasOpt('pretty')) ? JSON_PRETTY_PRINT : 0;
+    print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $opts);
+    return;
+}
 
-print "production packages\n===================\n";
-print_pkgs(diff($JQ_FILTER));
+print tableize('Production Changes', $prod);
+print tableize('Dev Changes', $dev);
 
-print "\ndev packages\n============\n";
-print_pkgs(diff($JQ_FILTER_DEV));
+function diff($key) {
 
-sub diff {
-    my $jq_filter = shift;
-    my %pkgs;
-    my $fh;
+    $pkgs = array();
 
-    open($fh, "-|", "git show HEAD:composer.lock | $jq_filter | sort") or die "Failed to open before command for reading; $!";
-    while(<$fh>) {
-        next unless /^(\S+) (\S+)$/;
-        $pkgs{$1} = [$2, "REMOVED"];
+    $lines = '';
+    exec('git show HEAD:composer.lock', $lines);
+    $data = json_decode(implode("\n", $lines));
+
+    foreach($data->$key as $pkg) {
+        $pkgs[$pkg->name] = array($pkg->version, 'REMOVED');
     }
-    close $fh;
 
-    open($fh, "-|", "cat composer.lock | $jq_filter | sort") or die "Failed to open before command for reading; $!";
-    while(<$fh>) {
-        next unless /^(\S+) (\S+)$/;
-        $pkgs{$1} = ["NEW", 0] unless defined $pkgs{$1};
-        if ($pkgs{$1}[0] eq $2) {
-            delete $pkgs{$1};
+    $data = json_decode(file_get_contents('composer.lock'));
+
+    foreach($data->$key as $pkg) {
+        if (! array_key_exists($pkg->name, $pkgs)) {
+            $pkgs[$pkg->name] = array('NEW', $pkg->version);
+            continue;
+        }
+
+        if ($pkgs[$pkg->name][0] == $pkg->version) {
+            unset($pkgs[$pkg->name]);
         } else {
-            $pkgs{$1}[1] = $2;
+            $pkgs[$pkg->name][1] = $pkg->version;
         }
     }
-    close $fh;
 
-    return \%pkgs;
+    return $pkgs;
 }
 
-sub print_pkgs {
-    my $pkgs = shift;
-    my $pkg_width = max_len(keys %$pkgs) + 1;
-    my $before_width = max_len(map { $pkgs->{$_}[0] } keys %$pkgs);
-    for my $k (keys %$pkgs) {
-        printf "%-${pkg_width}s %-${before_width}s => %s\n", $k, $pkgs->{$k}[0], $pkgs->{$k}[1];
+function hasOpt($opt) {
+    global $argv;
+    $prefix = strlen($opt) === 1 ? '-' : '--';
+    return in_array($prefix.$opt, $argv);
+}
+
+function tableize($header, $data) {
+    $widths = array(maxLength(array_merge(array($header), array_keys($data))));
+
+    for($i = 0; $i < count(reset($data)); $i++) {
+        $widths[] = maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data)));
     }
+
+    $total_width = array_sum($widths) + (count($widths) * 3) + 1;
+
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+    $lines[] = tabelizeLine(array($header, 'From', 'To'), $widths);
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+
+    foreach($data as $key => $v) {
+        $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
+    }
+
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+
+    return implode(PHP_EOL, $lines) . PHP_EOL;
 }
 
-sub max_len {
-    return max map { length } @_;
+function maxLength(array $array) {
+    return max(array_map('strlen', $array));
+}
+
+function tabelizeLine($data, $widths) {
+    $fields = array();
+    $count = max(array(count($data), count($widths)));
+    for($i = 0; $i < $count; $i++) {
+        $value = ($i >= count($data)) ? '' : $data[$i];
+        $width = ($i >= count($widths)) ? strlen($value) : $widths[$i];
+        $fields[] = sprintf("%-{$width}s", $value);
+    }
+    return '| ' . implode(' | ', $fields) . ' |';
 }
 
