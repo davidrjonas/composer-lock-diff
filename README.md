@@ -4,8 +4,7 @@ composer-lock-diff
 See what packages have changed after you run `composer update` by comparing composer.lock to the the git HEAD.
 
 Requires:
-- perl >= 5.14 (probably 5.6 but only tested with 5.14)
-- jq   >= 1.2 (maybe earlier, tested with 1.2 from 2013)
+- php >= 5.3
 
 Usage
 =====
@@ -16,27 +15,36 @@ composer update
 composer-lock-diff
 ```
 
-Example Output
-==============
+Or from vim, to insert the output into the commit message, type `:r!composer-lock-diff`.
+
+### Options
+
+- `--json`: json output
+- `--pretty`: pretty output when combined with `--json` (>=5.4 only)
+
+Example Table Output
+====================
 
 ```
-production packages
-===================
-predis/predis            dev-master => v1.1.1
-nikic/php-parser         v2.0.0     => v2.1.1
-paragonie/random_compat  1.1.4      => v1.4.1
-psr/log                  1.0.0      => 1.0.1
-sentry/sentry            0.22.0     => 1.4.1
-league/flysystem         1.0.16     => REMOVED
-
-dev packages
-============
-behat/mink-selenium2-driver  v1.3.0    => v1.3.1
-symfony/yaml                 v2.8.1    => v3.1.4
-doctrine/dbal                v2.5.3    => v2.5.5
-behat/gherkin                v4.4.1    => v4.4.4
-phpspec/phpspec              2.4.0     => 2.5.3
-henrikbjorn/lurker           1.0.0     => dev-master
-mockery/mockery              0.9.4     => 0.9.5
-webmozart/assert             NEW       => 1.1.0
++---------------------------------------------------------+
+| Production Changes               | From       | To      |
++---------------------------------------------------------+
+| guzzlehttp/guzzle                | 6.2.0      | 6.2.1   |
+| hashids/hashids                  | 1.0.5      | 1.0.6   |
+| laravel/framework                | v5.1.27    | v5.1.44 |
+| league/flysystem                 | 1.0.16     | 1.0.27  |
+| monolog/monolog                  | 1.17.2     | 1.21.0  |
+| symfony/polyfill-mbstring        | NEW        | v1.2.0  |
++---------------------------------------------------------+
++------------------------------------------------------------+
+| Dev Changes                       | From      | To         |
++------------------------------------------------------------+
+| behat/behat                       | v3.0.15   | v3.2.1     |
+| behat/gherkin                     | v4.4.1    | v4.4.4     |
+| behat/mink                        | v1.7.0    | v1.7.1     |
+| behat/mink-browserkit-driver      | v1.3.0    | v1.3.2     |
+| behat/mink-extension              | v2.1.0    | v2.2       |
+| behat/mink-selenium2-driver       | v1.3.0    | v1.3.1     |
+| mockery/mockery                   | 0.9.4     | REMOVED    |
++------------------------------------------------------------+
 ```
