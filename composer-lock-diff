@@ -50,6 +50,8 @@ function hasOpt($opt) {
 }
 
 function tableize($header, $data) {
+    if (empty($data)) return '';
+
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
     for($i = 0; $i < count(reset($data)); $i++) {
