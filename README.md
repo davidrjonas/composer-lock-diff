@@ -6,6 +6,8 @@ See what packages have changed after you run `composer update` by comparing comp
 Requires:
 - php >= 5.3
 
+There are no other dependencies. Just copy the file to `/usr/local/bin`.
+
 Usage
 =====
 
