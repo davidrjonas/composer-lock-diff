@@ -1,11 +1,17 @@
 #!/usr/bin/env php
 <?php
 
-print "production packages\n===================\n";
-print_pkgs(diff('packages'));
+$prod = diff('packages');
+$dev = diff('packages-dev');
 
-print "\ndev packages\n============\n";
-print_pkgs(diff('packages-dev'));
+if (hasOpt('json')) {
+    $opts = (hasOpt('pretty')) ? JSON_PRETTY_PRINT : 0;
+    print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $opts);
+    return;
+}
+
+print tableize('Production Changes', $prod);
+print tableize('Dev Changes', $dev);
 
 function diff($key) {
 
@@ -37,12 +43,46 @@ function diff($key) {
     return $pkgs;
 }
 
-function print_pkgs($pkgs) {
+function hasOpt($opt) {
+    global $argv;
+    $prefix = strlen($opt) === 1 ? '-' : '--';
+    return in_array($prefix.$opt, $argv);
+}
 
-    $pkg_width = max(array_map('strlen', array_keys($pkgs))) + 1;
-    $before_width = max(array_map('strlen', array_map(function($v) { return $v[0]; }, $pkgs)));
-    foreach($pkgs as $name => $v) {
-        printf("%-{$pkg_width}s %-{$before_width}s => %s\n", $name, $v[0], $v[1]);
+function tableize($header, $data) {
+    $widths = array(maxLength(array_merge(array($header), array_keys($data))));
+
+    for($i = 0; $i < count(reset($data)); $i++) {
+        $widths[] = maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data)));
     }
+
+    $total_width = array_sum($widths) + (count($widths) * 3) + 1;
+
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+    $lines[] = tabelizeLine(array($header, 'From', 'To'), $widths);
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+
+    foreach($data as $key => $v) {
+        $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
+    }
+
+    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+
+    return implode(PHP_EOL, $lines) . PHP_EOL;
+}
+
+function maxLength(array $array) {
+    return max(array_map('strlen', $array));
+}
+
+function tabelizeLine($data, $widths) {
+    $fields = array();
+    $count = max(array(count($data), count($widths)));
+    for($i = 0; $i < $count; $i++) {
+        $value = ($i >= count($data)) ? '' : $data[$i];
+        $width = ($i >= count($widths)) ? strlen($value) : $widths[$i];
+        $fields[] = sprintf("%-{$width}s", $value);
+    }
+    return '| ' . implode(' | ', $fields) . ' |';
 }
 
