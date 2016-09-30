@@ -1,0 +1,54 @@
+#!/usr/bin/perl -w
+
+use strict;
+use List::Util qw(max);
+
+my $JQ_FILTER = "jq -r '.packages[] | \"\\(.name) \\(.version)\"'";
+my $JQ_FILTER_DEV = "sed 's/packages-dev/packages_dev/g' | jq -r '.packages_dev[] | \"\\(.name) \\(.version)\"'";
+
+print "production packages\n===================\n";
+print_pkgs(diff($JQ_FILTER));
+
+print "\ndev packages\n============\n";
+print_pkgs(diff($JQ_FILTER_DEV));
+
+sub diff {
+    my $jq_filter = shift;
+    my %pkgs;
+    my $fh;
+
+    open($fh, "-|", "git show HEAD:composer.lock | $jq_filter | sort") or die "Failed to open before command for reading; $!";
+    while(<$fh>) {
+        next unless /^(\S+) (\S+)$/;
+        $pkgs{$1} = [$2, "REMOVED"];
+    }
+    close $fh;
+
+    open($fh, "-|", "cat composer.lock | $jq_filter | sort") or die "Failed to open before command for reading; $!";
+    while(<$fh>) {
+        next unless /^(\S+) (\S+)$/;
+        $pkgs{$1} = ["NEW", 0] unless defined $pkgs{$1};
+        if ($pkgs{$1}[0] eq $2) {
+            delete $pkgs{$1};
+        } else {
+            $pkgs{$1}[1] = $2;
+        }
+    }
+    close $fh;
+
+    return \%pkgs;
+}
+
+sub print_pkgs {
+    my $pkgs = shift;
+    my $pkg_width = max_len(keys %$pkgs) + 1;
+    my $before_width = max_len(map { $pkgs->{$_}[0] } keys %$pkgs);
+    for my $k (keys %$pkgs) {
+        printf "%-${pkg_width}s %-${before_width}s => %s\n", $k, $pkgs->{$k}[0], $pkgs->{$k}[1];
+    }
+}
+
+sub max_len {
+    return max map { length } @_;
+}
+
