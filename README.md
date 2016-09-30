@@ -3,6 +3,10 @@ composer-lock-diff
 
 See what packages have changed after you run `composer update` by comparing composer.lock to the the git HEAD.
 
+Requires:
+- perl >= 5.14 (probably 5.6 but only tested with 5.14)
+- jq   >= 1.2 (maybe earlier, tested with 1.2 from 2013)
+
 Usage
 =====
 
