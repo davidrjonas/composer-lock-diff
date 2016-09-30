@@ -27,6 +27,7 @@ nikic/php-parser         v2.0.0     => v2.1.1
 paragonie/random_compat  1.1.4      => v1.4.1
 psr/log                  1.0.0      => 1.0.1
 sentry/sentry            0.22.0     => 1.4.1
+league/flysystem         1.0.16     => REMOVED
 
 dev packages
 ============
@@ -37,4 +38,5 @@ behat/gherkin                v4.4.1    => v4.4.4
 phpspec/phpspec              2.4.0     => 2.5.3
 henrikbjorn/lurker           1.0.0     => dev-master
 mockery/mockery              0.9.4     => 0.9.5
+webmozart/assert             NEW       => 1.1.0
 ```
