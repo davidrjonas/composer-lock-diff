@@ -6,7 +6,16 @@ See what packages have changed after you run `composer update` by comparing comp
 Requires:
 - php >= 5.3
 
-There are no other dependencies. Just copy the file to `/usr/local/bin`.
+There are no other dependencies.
+
+Install
+-------
+
+```bash
+composer global require davidrjonas/composer-lock-diff:^1.0@dev
+```
+
+Or just copy the 'composer-lock-diff' to `/usr/local/bin`.
 
 Usage
 =====

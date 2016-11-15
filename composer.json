@@ -1,0 +1,13 @@
+{
+    "name": "davidrjonas/composer-lock-diff",
+    "description": "See what has changed after a composer update.",
+    "authors": [{
+        "name": "David Jonas",
+        "homepage": "https://github.com/davidrjonas"
+    }],
+    "type": "library",
+    "license": "MIT",
+    "require": {},
+    "bin": ["composer-lock-diff"],
+    "extra": { "branch-alias": { "dev-master": "1.0.x-dev" }}
+}
