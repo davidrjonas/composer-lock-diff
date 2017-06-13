@@ -22,25 +22,39 @@ function diff($key) {
     $data = json_decode(implode("\n", $lines));
 
     foreach($data->$key as $pkg) {
-        $pkgs[$pkg->name] = array($pkg->version, 'REMOVED');
+        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED');
     }
 
     $data = json_decode(file_get_contents('composer.lock'));
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
-            $pkgs[$pkg->name] = array('NEW', $pkg->version);
+            $pkgs[$pkg->name] = array('NEW', version($pkg));
             continue;
         }
 
-        if ($pkgs[$pkg->name][0] == $pkg->version) {
+        if ($pkgs[$pkg->name][0] == version($pkg)) {
             unset($pkgs[$pkg->name]);
         } else {
-            $pkgs[$pkg->name][1] = $pkg->version;
+            $pkgs[$pkg->name][1] = version($pkg);
         }
     }
 
     return $pkgs;
+}
+
+function version($pkg)
+{
+    $version = null;
+    if(substr($pkg->version,0,4) == 'dev-')
+    {
+        $version = substr($pkg->source->reference,0,7);
+    }
+    else
+    {
+        $version = $pkg->version;
+    }
+    return $version;
 }
 
 function hasOpt($opt) {
