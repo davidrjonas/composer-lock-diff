@@ -14,11 +14,16 @@ print tableize('Production Changes', $prod);
 print tableize('Dev Changes', $dev);
 
 function diff($key) {
+    global $argv;
 
     $pkgs = array();
 
+    $ref = array_reduce($argv, function ($carry, $item) {
+        return preg_match('/^[a-f0-9]+$/', $item) ? $item : $carry;
+    }, 'HEAD');
+
     $lines = '';
-    exec('git show HEAD:composer.lock', $lines);
+    exec("git show $ref:composer.lock", $lines);
     $data = json_decode(implode("\n", $lines));
 
     foreach($data->$key as $pkg) {
@@ -101,4 +106,3 @@ function tabelizeLine($data, $widths) {
     }
     return '| ' . implode(' | ', $fields) . ' |';
 }
-
