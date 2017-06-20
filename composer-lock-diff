@@ -1,11 +1,13 @@
 #!/usr/bin/env php
 <?php
 
-$prod = diff('packages');
-$dev = diff('packages-dev');
+$opts = parseOpts();
 
-if (hasOpt('json')) {
-    $opts = (hasOpt('pretty')) ? JSON_PRETTY_PRINT : 0;
+$prod = diff('packages', $opts['from'], $opts['to']);
+$dev = diff('packages-dev', $opts['from'], $opts['to']);
+
+if ($opts['json']) {
+    $opts = ($opt['pretty']) ? JSON_PRETTY_PRINT : 0;
     print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $opts);
     return;
 }
@@ -13,19 +15,17 @@ if (hasOpt('json')) {
 print tableize('Production Changes', $prod);
 print tableize('Dev Changes', $dev);
 
-function diff($key) {
+function diff($key, $from, $to) {
 
     $pkgs = array();
 
-    $lines = '';
-    exec('git show HEAD:composer.lock', $lines);
-    $data = json_decode(implode("\n", $lines));
+    $data = load($from);
 
     foreach($data->$key as $pkg) {
         $pkgs[$pkg->name] = array(version($pkg), 'REMOVED');
     }
 
-    $data = json_decode(file_get_contents('composer.lock'));
+    $data = load($to);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
@@ -55,12 +55,6 @@ function version($pkg)
         $version = $pkg->version;
     }
     return $version;
-}
-
-function hasOpt($opt) {
-    global $argv;
-    $prefix = strlen($opt) === 1 ? '-' : '--';
-    return in_array($prefix.$opt, $argv);
 }
 
 function tableize($header, $data) {
@@ -100,5 +94,74 @@ function tabelizeLine($data, $widths) {
         $fields[] = sprintf("%-{$width}s", $value);
     }
     return '| ' . implode(' | ', $fields) . ' |';
+}
+
+function load($fileish) {
+    $orig = $fileish;
+
+    if (empty($fileish)) {
+        $fileish = 'composer.lock';
+    }
+
+    if (file_exists($fileish)) {
+        return mustDecodeJson(file_get_contents($fileish), $fileish);
+    }
+
+    if (strpos($fileish, ':') === false) {
+        $fileish .= ':composer.lock';
+    }
+
+    $lines = '';
+
+    exec('git show '. escapeshellarg($fileish), $lines, $exit);
+
+    if ($exit !== 0) {
+        error_log("Error: cannot open $orig or find it in git as $fileish");
+        exit(1);
+    }
+
+    return mustDecodeJson(implode("\n", $lines), $fileish);
+}
+
+function mustDecodeJson($json, $context) {
+    $data = json_decode($json);
+
+    if (empty($data)) {
+        error_log("Error: contents from $context does not decode as json");
+        exit(1);
+    }
+
+    return $data;
+}
+
+function parseOpts() {
+    $given = getopt('h', array('from:', 'to:', 'json', 'pretty', 'help'));
+
+    if (array_key_exists('h', $given) || array_key_exists('help', $given)) {
+        usage();
+    }
+
+    return array(
+        'from' => array_key_exists('from', $given) ? $given['from'] : 'HEAD',
+        'to' => array_key_exists('to', $given) ? $given['to'] : '',
+        'json' => array_key_exists('json', $given),
+        'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
+    );
+}
+
+function usage() {
+    print <<<EOF
+Usage: composer-lock-diff [options]
+
+Options:
+  -h --help  Print this message
+  --from     The file, git ref, or git ref with filename to compare from (HEAD:composer.lock)
+  --to       The file, git ref, or git ref with filename to compare to (composer.lock)
+  --json     Format output as JSON
+  --pretty   Pretty print JSON output (PHP >= 5.4.0)
+
+EOF;
+
+    exit(0);
 }
 
