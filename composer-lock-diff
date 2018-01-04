@@ -108,7 +108,7 @@ function load($fileish) {
     }
 
     if (strpos($fileish, ':') === false) {
-        $fileish .= ':composer.lock';
+        $fileish .= ':./composer.lock';
     }
 
     $lines = '';
