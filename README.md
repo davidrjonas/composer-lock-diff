@@ -34,6 +34,7 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 - `--to`: The file^, git ref, or git ref with filename to compare to (composer.lock)
 - `--json`: json output
 - `--pretty`: pretty output when combined with `--json` (>=5.4 only)
+- `--md` : markdown text output
 
 ^ File includes anything available as a [protocol stream wrapper](http://php.net/manual/en/wrappers.php) such as URLs.
 
