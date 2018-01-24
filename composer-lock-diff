@@ -12,8 +12,10 @@ if ($opts['json']) {
     return;
 }
 
-print tableize('Production Changes', $prod);
-print tableize('Dev Changes', $dev);
+$table_opts = ($opts['md']) ? array('capped' => false, 'joint' => '|') : array();
+
+print tableize('Production Changes', $prod, $table_opts);
+print tableize('Dev Changes', $dev, $table_opts);
 
 function diff($key, $from, $to, $base_path) {
 
@@ -57,8 +59,10 @@ function version($pkg)
     return $version;
 }
 
-function tableize($header, $data) {
+function tableize($header, $data, $opts = array()) {
     if (empty($data)) return '';
+
+    $opts = array_merge(array('capped' => true, 'joint' => '+'), $opts);
 
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
@@ -68,17 +72,26 @@ function tableize($header, $data) {
 
     $total_width = array_sum($widths) + (count($widths) * 3) + 1;
 
-    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+    if ($opts['capped']) {
+        $lines[] = separatorLine($widths, $opts['joint']);
+    }
+
     $lines[] = tabelizeLine(array($header, 'From', 'To'), $widths);
-    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+    $lines[] = separatorLine($widths, $opts['joint']);
 
     foreach($data as $key => $v) {
         $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
     }
 
-    $lines[] = '+' . str_repeat('-', $total_width - 2) . '+';
+    if ($opts['capped']) {
+        $lines[] = separatorLine($widths, $opts['joint']);
+    }
 
-    return implode(PHP_EOL, $lines) . PHP_EOL;
+    return implode(PHP_EOL, array_filter($lines)) . PHP_EOL . PHP_EOL;
+}
+
+function separatorLine($widths, $joint) {
+    return $joint . implode($joint, array_map(function($n) { return str_repeat('-', $n + 2); }, $widths)) . $joint;
 }
 
 function maxLength(array $array) {
@@ -141,7 +154,7 @@ function mustDecodeJson($json, $context) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'json', 'pretty', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'help'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -158,6 +171,7 @@ function parseOpts() {
         'path' => array_key_exists('path', $given) ? $given['path'] : '',
         'from' => array_key_exists('from', $given) ? $given['from'] : 'HEAD',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
+        'md' => array_key_exists('md', $given),
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
     );
@@ -175,6 +189,7 @@ Options:
   --to       The file, git ref, or git ref with filename to compare to (composer.lock)
   --json     Format output as JSON
   --pretty   Pretty print JSON output (PHP >= 5.4.0)
+  --md       Use markdown instead of plain text
 
 EOF;
 
