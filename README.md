@@ -113,3 +113,13 @@ Markdown Table
 | behat/mink-extension              | v2.1.0    | v2.2       |
 | behat/mink-selenium2-driver       | v1.3.0    | v1.3.1     |
 | mockery/mockery                   | 0.9.4     | REMOVED    |
+
+Contributors
+============
+
+Thanks to everyone who has shared ideas and code! In particular,
+
+- https://github.com/delamart
+- https://github.com/prometheas
+- https://github.com/paxal
+
