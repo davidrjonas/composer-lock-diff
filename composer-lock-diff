@@ -3,8 +3,8 @@
 
 $opts = parseOpts();
 
-$prod = diff('packages', $opts['from'], $opts['to']);
-$dev = diff('packages-dev', $opts['from'], $opts['to']);
+$prod = diff('packages', $opts['from'], $opts['to'], $opts['path']);
+$dev = diff('packages-dev', $opts['from'], $opts['to'], $opts['path']);
 
 if ($opts['json']) {
     $opts = ($opt['pretty']) ? JSON_PRETTY_PRINT : 0;
@@ -15,17 +15,17 @@ if ($opts['json']) {
 print tableize('Production Changes', $prod);
 print tableize('Dev Changes', $dev);
 
-function diff($key, $from, $to) {
+function diff($key, $from, $to, $base_path) {
 
     $pkgs = array();
 
-    $data = load($from);
+    $data = load($from, $base_path);
 
     foreach($data->$key as $pkg) {
         $pkgs[$pkg->name] = array(version($pkg), 'REMOVED');
     }
 
-    $data = load($to);
+    $data = load($to, $base_path);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
@@ -96,19 +96,25 @@ function tabelizeLine($data, $widths) {
     return '| ' . implode(' | ', $fields) . ' |';
 }
 
-function load($fileish) {
+function load($fileish, $base_path = '') {
     $orig = $fileish;
 
+    if (empty($base_path)) {
+        $base_path = '.' . DIRECTORY_SEPARATOR;
+    } else {
+        $base_path = rtrim($base_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+
     if (empty($fileish)) {
-        $fileish = 'composer.lock';
+        $fileish = $base_path . 'composer.lock';
     }
 
     if (file_exists($fileish)) {
         return mustDecodeJson(file_get_contents($fileish), $fileish);
     }
 
-    if (strpos($fileish, ':') === false) {
-        $fileish .= ':composer.lock';
+    if (strpos($orig, ':') === false) {
+        $fileish .= ':' . $base_path . 'composer.lock';
     }
 
     $lines = '';
@@ -135,13 +141,21 @@ function mustDecodeJson($json, $context) {
 }
 
 function parseOpts() {
-    $given = getopt('h', array('from:', 'to:', 'json', 'pretty', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'json', 'pretty', 'help'));
 
-    if (array_key_exists('h', $given) || array_key_exists('help', $given)) {
+    foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
+        if (array_key_exists($short, $given)) {
+            $given[$long] = $given[$short];
+            unset($given[$short]);
+        }
+    }
+
+    if (array_key_exists('help', $given)) {
         usage();
     }
 
     return array(
+        'path' => array_key_exists('path', $given) ? $given['path'] : '',
         'from' => array_key_exists('from', $given) ? $given['from'] : 'HEAD',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
         'json' => array_key_exists('json', $given),
@@ -155,6 +169,8 @@ Usage: composer-lock-diff [options]
 
 Options:
   -h --help  Print this message
+  --path, -p Base to with which to prefix paths. Default "./"
+             E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
   --from     The file, git ref, or git ref with filename to compare from (HEAD:composer.lock)
   --to       The file, git ref, or git ref with filename to compare to (composer.lock)
   --json     Format output as JSON

@@ -30,6 +30,7 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 
 ### Options
 
+- `--path, -p`: Base to with which to prefix paths. Default "./"
 - `--from`: The file^, git ref, or git ref with filename to compare from (HEAD:composer.lock)
 - `--to`: The file^, git ref, or git ref with filename to compare to (composer.lock)
 - `--json`: json output
