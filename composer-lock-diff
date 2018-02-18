@@ -70,8 +70,6 @@ function tableize($header, $data, $opts = array()) {
         $widths[] = maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data)));
     }
 
-    $total_width = array_sum($widths) + (count($widths) * 3) + 1;
-
     if ($opts['capped']) {
         $lines[] = separatorLine($widths, $opts['joint']);
     }
