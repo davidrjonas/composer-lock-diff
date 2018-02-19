@@ -87,7 +87,8 @@ function tableize($header, $data, $opts = array()) {
 
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
-    for($i = 0; $i < count(reset($data)); $i++) {
+    $count = count(reset($data));
+    for($i = 0; $i < $count; $i++) {
         $widths[] = maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data)));
     }
 
