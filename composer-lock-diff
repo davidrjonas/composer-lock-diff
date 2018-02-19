@@ -12,7 +12,17 @@ if ($opts['json']) {
     return;
 }
 
-$table_opts = ($opts['md']) ? array('capped' => false, 'joint' => '|') : array();
+$table_opts = array(
+    'no-links' => $opts['no-links'],
+);
+
+if ($opts['md']) {
+    $table_opts = array_merge($table_opts, array(
+        'capped' => false,
+        'joint' => '|',
+        'url_formatter' => 'urlFormatterMd',
+    ));
+}
 
 print tableize('Production Changes', $prod, $table_opts);
 print tableize('Dev Changes', $dev, $table_opts);
@@ -24,14 +34,14 @@ function diff($key, $from, $to, $base_path) {
     $data = load($from, $base_path);
 
     foreach($data->$key as $pkg) {
-        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED');
+        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
     }
 
     $data = load($to, $base_path);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
-            $pkgs[$pkg->name] = array('NEW', version($pkg));
+            $pkgs[$pkg->name] = array('NEW', version($pkg), '');
             continue;
         }
 
@@ -39,6 +49,7 @@ function diff($key, $from, $to, $base_path) {
             unset($pkgs[$pkg->name]);
         } else {
             $pkgs[$pkg->name][1] = version($pkg);
+            $pkgs[$pkg->name][2] = makeCompareUrl($pkg, $pkgs);
         }
     }
 
@@ -61,6 +72,19 @@ function tableize($header, $data, $opts = array()) {
 
     $opts = array_merge(array('capped' => true, 'joint' => '+'), $opts);
 
+    if ($opts['no-links']) {
+        array_walk($data, function(&$values) {
+            unset($values[2]);
+        });
+    } else {
+        if (array_key_exists('url_formatter', $opts)) {
+            $formatter = $opts['url_formatter'];
+            array_walk($data, function(&$values) use ($formatter) {
+                $values[2] = call_user_func($formatter, $values[2], '...');
+            });
+        }
+    }
+
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
     for($i = 0; $i < count(reset($data)); $i++) {
@@ -71,7 +95,10 @@ function tableize($header, $data, $opts = array()) {
         $lines[] = separatorLine($widths, $opts['joint']);
     }
 
-    $lines[] = tabelizeLine(array($header, 'From', 'To'), $widths);
+    $titles = array($header, 'From', 'To');
+    if (! $opts['no-links']) array_push($titles, 'Compare');
+
+    $lines[] = tabelizeLine($titles, $widths);
     $lines[] = separatorLine($widths, $opts['joint']);
 
     foreach($data as $key => $v) {
@@ -102,6 +129,11 @@ function tabelizeLine($data, $widths) {
         $fields[] = sprintf("%-{$width}s", $value);
     }
     return '| ' . implode(' | ', $fields) . ' |';
+}
+
+function urlFormatterMd($url, $text) {
+    if (empty($url)) return '';
+    return sprintf('[%s](%s)', $text, $url);
 }
 
 function load($fileish, $base_path = '') {
@@ -148,8 +180,47 @@ function mustDecodeJson($json, $context) {
     return $data;
 }
 
+function makeCompareUrl($pkg, $diff) {
+    $func = 'formatCompare' . ucfirst(getSourceRepoType($pkg->source->url));
+    return call_user_func($func, $pkg->source->url, $diff[$pkg->name][0], $diff[$pkg->name][1]);
+}
+
+function getSourceRepoType($url) {
+    if (! preg_match('/^http/i', $url)) {
+        return 'unknown';
+    }
+
+    $host = strtolower(parse_url($url, PHP_URL_HOST));
+
+    if (strpos($host, 'github') !== false) {
+        return 'github';
+    } elseif (strpos($host, 'bitbucket') !== false) {
+        return 'bitbucket';
+    } elseif (strpos($host, 'gitlab') !== false) {
+        return 'gitlab';
+    }
+
+    return 'unknown';
+}
+
+function formatCompareUnknown($url, $from, $to) {
+    return '';
+}
+
+function formatCompareGithub($url, $from, $to) {
+    return sprintf('%s/compare/%s...%s', preg_replace('/\.git$/', '', $url), urlencode($from), urlencode($to));
+}
+
+function formatCompareBitbucket($url, $from, $to) {
+    return sprintf('%s/branches/compare/%s%%0D%s', preg_replace('/\.git$/', '', $url), urlencode($from), urlencode($to));
+}
+
+function formatCompareGitlab($url, $from, $to) {
+    return sprintf('%s/compare/%s...%s', preg_replace('/\.git$/', '', $url), urlencode($from), urlencode($to));
+}
+
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'help'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -169,6 +240,7 @@ function parseOpts() {
         'md' => array_key_exists('md', $given),
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
+        'no-links' => array_key_exists('no-links', $given),
     );
 }
 
@@ -185,6 +257,7 @@ Options:
   --json     Format output as JSON
   --pretty   Pretty print JSON output (PHP >= 5.4.0)
   --md       Use markdown instead of plain text
+  --no-links Don't include Compare links in plain text or any links in markdown
 
 EOF;
 
