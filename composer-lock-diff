@@ -28,9 +28,9 @@ function diff($key, $from, $to, $base_path) {
     }
 
     $data = load($to, $base_path);
-
+    
     foreach($data->$key as $pkg) {
-        if (! array_key_exists($pkg->name, $pkgs)) {
+        if (!array_key_exists($pkg->name, $pkgs)) {
             $pkgs[$pkg->name] = array('NEW', version($pkg));
             continue;
         }
@@ -39,6 +39,7 @@ function diff($key, $from, $to, $base_path) {
             unset($pkgs[$pkg->name]);
         } else {
             $pkgs[$pkg->name][1] = version($pkg);
+            $pkgs[$pkg->name][2] = getGithubCompareUrl($pkgs, $pkg);
         }
     }
 
@@ -74,11 +75,17 @@ function tableize($header, $data, $opts = array()) {
         $lines[] = separatorLine($widths, $opts['joint']);
     }
 
-    $lines[] = tabelizeLine(array($header, 'From', 'To'), $widths);
+    $lines[] = tabelizeLine(array($header, 'From', 'To', 'Compare'), $widths);
     $lines[] = separatorLine($widths, $opts['joint']);
 
-    foreach($data as $key => $v) {
-        $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
+    foreach($data as $packageKey => $packageData) {
+        $lineData = array(
+            $packageKey,
+            $packageData[0],
+            $packageData[1],
+            $packageData[2]
+        );
+        $lines[] = tabelizeLine($lineData, $widths);
     }
 
     if ($opts['capped']) {
@@ -172,6 +179,38 @@ function parseOpts() {
         'md' => array_key_exists('md', $given),
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
+    );
+}
+
+/**
+ * @param stdClass $packageSource
+ *
+ * @return bool
+ */
+function isPackageOnGithub($packageSource){
+    if (strpos($packageSource->url, 'github.com') !== false) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @param array $packagesDiff
+ * @param stdClass $package
+ *
+ * @return string
+ */
+function getGithubCompareUrl($packagesDiff, $package){
+    if(isPackageOnGithub($package->source) === false){
+        return '';
+    }
+
+    return sprintf(
+        '%s/compare/%s...%s',
+        str_replace('.git', '', $package->source->url),
+        $packagesDiff[$package->name][0],
+        $packagesDiff[$package->name][1]
     );
 }
 
