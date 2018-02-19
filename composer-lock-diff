@@ -17,6 +17,14 @@ $table_opts = ($opts['md']) ? array('capped' => false, 'joint' => '|') : array()
 print tableize('Production Changes', $prod, $table_opts);
 print tableize('Dev Changes', $dev, $table_opts);
 
+/**
+ * @param $key
+ * @param $from
+ * @param $to
+ * @param $base_path
+ *
+ * @return array
+ */
 function diff($key, $from, $to, $base_path) {
 
     $pkgs = array();
@@ -45,6 +53,11 @@ function diff($key, $from, $to, $base_path) {
     return $pkgs;
 }
 
+/**
+ * @param $pkg
+ *
+ * @return bool|null|string
+ */
 function version($pkg)
 {
     $version = null;
@@ -59,6 +72,13 @@ function version($pkg)
     return $version;
 }
 
+/**
+ * @param       $header
+ * @param       $data
+ * @param array $opts
+ *
+ * @return string
+ */
 function tableize($header, $data, $opts = array()) {
     if (empty($data)) return '';
 
@@ -88,14 +108,31 @@ function tableize($header, $data, $opts = array()) {
     return implode(PHP_EOL, array_filter($lines)) . PHP_EOL . PHP_EOL;
 }
 
+/**
+ * @param $widths
+ * @param $joint
+ *
+ * @return string
+ */
 function separatorLine($widths, $joint) {
     return $joint . implode($joint, array_map(function($n) { return str_repeat('-', $n + 2); }, $widths)) . $joint;
 }
 
+/**
+ * @param array $array
+ *
+ * @return mixed
+ */
 function maxLength(array $array) {
     return max(array_map('strlen', $array));
 }
 
+/**
+ * @param $data
+ * @param $widths
+ *
+ * @return string
+ */
 function tabelizeLine($data, $widths) {
     $fields = array();
     $count = max(array(count($data), count($widths)));
@@ -107,6 +144,12 @@ function tabelizeLine($data, $widths) {
     return '| ' . implode(' | ', $fields) . ' |';
 }
 
+/**
+ * @param        $fileish
+ * @param string $base_path
+ *
+ * @return mixed
+ */
 function load($fileish, $base_path = '') {
     $orig = $fileish;
 
@@ -140,6 +183,12 @@ function load($fileish, $base_path = '') {
     return mustDecodeJson(implode("\n", $lines), $fileish);
 }
 
+/**
+ * @param $json
+ * @param $context
+ *
+ * @return mixed
+ */
 function mustDecodeJson($json, $context) {
     $data = json_decode($json);
 
@@ -151,6 +200,9 @@ function mustDecodeJson($json, $context) {
     return $data;
 }
 
+/**
+ * @return array
+ */
 function parseOpts() {
     $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'help'));
 
@@ -193,4 +245,3 @@ EOF;
 
     exit(0);
 }
-
