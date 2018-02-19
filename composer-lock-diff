@@ -7,8 +7,8 @@ $prod = diff('packages', $opts['from'], $opts['to'], $opts['path']);
 $dev = diff('packages-dev', $opts['from'], $opts['to'], $opts['path']);
 
 if ($opts['json']) {
-    $opts = ($opt['pretty']) ? JSON_PRETTY_PRINT : 0;
-    print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $opts);
+    $json_opts = ($opts['pretty']) ? JSON_PRETTY_PRINT : 0;
+    print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $json_opts);
     return;
 }
 
