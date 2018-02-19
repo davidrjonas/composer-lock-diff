@@ -4,6 +4,7 @@ Session.vim
 .netrwhist
 *~
 tags
+tags.*
 .DS_Store
 .DS_Store?
 ._*
@@ -11,3 +12,4 @@ tags
 .Trashes
 ehthumbs.db
 Thumbs.db
+/test-project
