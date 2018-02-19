@@ -36,35 +36,28 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 - `--md`: Markdown table output
 - `--json`: json output
 - `--pretty`: pretty output when combined with `--json` (>=5.4 only)
+- `--no-links`: Don't include Compare links in plain text or any links in markdown
 
 ^ File includes anything available as a [protocol stream wrapper](http://php.net/manual/en/wrappers.php) such as URLs.
 
-Example Table Output
-====================
+Example Plain Text Table Output
+===============================
 
 ```
-+----------------------------------+------------+---------+
-| Production Changes               | From       | To      |
-+----------------------------------+------------+---------+
-| guzzlehttp/guzzle                | 6.2.0      | 6.2.1   |
-| hashids/hashids                  | 1.0.5      | 1.0.6   |
-| laravel/framework                | v5.1.27    | v5.1.44 |
-| league/flysystem                 | 1.0.16     | 1.0.27  |
-| monolog/monolog                  | 1.17.2     | 1.21.0  |
-| symfony/polyfill-mbstring        | NEW        | v1.2.0  |
-+----------------------------------+------------+---------+
++--------------------+-------+--------+------------------------------------------------------------------+
+| Production Changes | From  | To     | Compare                                                          |
++--------------------+-------+--------+------------------------------------------------------------------+
+| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0           |
+| hashids/hashids    | 2.0.0 | 2.0.4  | https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4  |
+| league/flysystem   | 1.0.0 | 1.0.42 | https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42 |
+| monolog/monolog    | NEW   | 1.21.0 |                                                                  |
++--------------------+-------+--------+------------------------------------------------------------------+
 
-+-----------------------------------+-----------+------------+
-| Dev Changes                       | From      | To         |
-+-----------------------------------+-----------+------------+
-| behat/behat                       | v3.0.15   | v3.2.1     |
-| behat/gherkin                     | v4.4.1    | v4.4.4     |
-| behat/mink                        | v1.7.0    | v1.7.1     |
-| behat/mink-browserkit-driver      | v1.3.0    | v1.3.2     |
-| behat/mink-extension              | v2.1.0    | v2.2       |
-| behat/mink-selenium2-driver       | v1.3.0    | v1.3.1     |
-| mockery/mockery                   | 0.9.4     | REMOVED    |
-+-----------------------------------+-----------+------------+
++------------------+--------+---------+---------+
+| Dev Changes      | From   | To      | Compare |
++------------------+--------+---------+---------+
+| phpspec/php-diff | v1.0.2 | REMOVED |         |
++------------------+--------+---------+---------+
 ```
 
 Markdown Table
@@ -73,46 +66,30 @@ Markdown Table
 ### Raw
 
 ```
-| Production Changes               | From       | To      |
-|----------------------------------|------------|---------|
-| guzzlehttp/guzzle                | 6.2.0      | 6.2.1   |
-| hashids/hashids                  | 1.0.5      | 1.0.6   |
-| laravel/framework                | v5.1.27    | v5.1.44 |
-| league/flysystem                 | 1.0.16     | 1.0.27  |
-| monolog/monolog                  | 1.17.2     | 1.21.0  |
-| symfony/polyfill-mbstring        | NEW        | v1.2.0  |
+| Production Changes | From  | To     | Compare                                                                 |
+|--------------------|-------|--------|-------------------------------------------------------------------------|
+| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
+| hashids/hashids    | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
+| league/flysystem   | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
+| monolog/monolog    | NEW   | 1.21.0 |                                                                         |
 
-| Dev Changes                       | From      | To         |
-|-----------------------------------|-----------|------------|
-| behat/behat                       | v3.0.15   | v3.2.1     |
-| behat/gherkin                     | v4.4.1    | v4.4.4     |
-| behat/mink                        | v1.7.0    | v1.7.1     |
-| behat/mink-browserkit-driver      | v1.3.0    | v1.3.2     |
-| behat/mink-extension              | v2.1.0    | v2.2       |
-| behat/mink-selenium2-driver       | v1.3.0    | v1.3.1     |
-| mockery/mockery                   | 0.9.4     | REMOVED    |
+| Dev Changes      | From   | To      | Compare |
+|------------------|--------|---------|---------|
+| phpspec/php-diff | v1.0.2 | REMOVED |         |
 ```
 
 ### Rendered
 
-| Production Changes               | From       | To      |
-|----------------------------------|------------|---------|
-| guzzlehttp/guzzle                | 6.2.0      | 6.2.1   |
-| hashids/hashids                  | 1.0.5      | 1.0.6   |
-| laravel/framework                | v5.1.27    | v5.1.44 |
-| league/flysystem                 | 1.0.16     | 1.0.27  |
-| monolog/monolog                  | 1.17.2     | 1.21.0  |
-| symfony/polyfill-mbstring        | NEW        | v1.2.0  |
+| Production Changes | From  | To     | Compare                                                                 |
+|--------------------|-------|--------|-------------------------------------------------------------------------|
+| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
+| hashids/hashids    | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
+| league/flysystem   | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
+| monolog/monolog    | NEW   | 1.21.0 |                                                                         |
 
-| Dev Changes                       | From      | To         |
-|-----------------------------------|-----------|------------|
-| behat/behat                       | v3.0.15   | v3.2.1     |
-| behat/gherkin                     | v4.4.1    | v4.4.4     |
-| behat/mink                        | v1.7.0    | v1.7.1     |
-| behat/mink-browserkit-driver      | v1.3.0    | v1.3.2     |
-| behat/mink-extension              | v2.1.0    | v2.2       |
-| behat/mink-selenium2-driver       | v1.3.0    | v1.3.1     |
-| mockery/mockery                   | 0.9.4     | REMOVED    |
+| Dev Changes      | From   | To      | Compare |
+|------------------|--------|---------|---------|
+| phpspec/php-diff | v1.0.2 | REMOVED |         |
 
 Contributors
 ============
@@ -122,4 +99,6 @@ Thanks to everyone who has shared ideas and code! In particular,
 - https://github.com/delamart
 - https://github.com/prometheas
 - https://github.com/paxal
+- https://github.com/nclavaud
+- https://github.com/cafferata
 
