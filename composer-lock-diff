@@ -85,19 +85,19 @@ function tableize($header, $data, $opts = array()) {
         }
     }
 
+    $titles = array($header, 'From', 'To');
+    if (! $opts['no-links']) array_push($titles, 'Compare');
+
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
     $count = count(reset($data));
     for($i = 0; $i < $count; $i++) {
-        $widths[] = maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data)));
+        $widths[] = max(strlen($titles[$i + 1]), maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data))));
     }
 
     if ($opts['capped']) {
         $lines[] = separatorLine($widths, $opts['joint']);
     }
-
-    $titles = array($header, 'From', 'To');
-    if (! $opts['no-links']) array_push($titles, 'Compare');
 
     $lines[] = tabelizeLine($titles, $widths);
     $lines[] = separatorLine($widths, $opts['joint']);
