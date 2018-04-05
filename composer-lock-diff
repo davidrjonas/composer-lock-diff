@@ -150,7 +150,7 @@ function load($fileish, $base_path = '') {
         $fileish = $base_path . 'composer.lock';
     }
 
-    if (file_exists($fileish)) {
+    if (file_exists($fileish) || url_exists($fileish)) {
         return mustDecodeJson(file_get_contents($fileish), $fileish);
     }
 
@@ -168,6 +168,22 @@ function load($fileish, $base_path = '') {
     }
 
     return mustDecodeJson(implode("\n", $lines), $fileish);
+}
+
+function url_exists($url) {
+	$headers = get_headers(
+		$url,
+		1,
+		stream_context_create(
+			array(
+				'http' => array(
+					'method' => 'HEAD'
+				)
+			)
+		)
+	);
+	krsort($headers);
+	return substr($headers[key($headers)], 9, 3) === '200';
 }
 
 function mustDecodeJson($json, $context) {
