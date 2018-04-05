@@ -24,8 +24,13 @@ if ($opts['md']) {
     ));
 }
 
-print tableize('Production Changes', $prod, $table_opts);
-print tableize('Dev Changes', $dev, $table_opts);
+if (!$opts['dev-only'] || $opts['no-dev']) {
+    print tableize('Production Changes', $prod, $table_opts);
+}
+
+if (!$opts['no-dev']) {
+    print tableize('Dev Changes', $dev, $table_opts);
+}
 
 function diff($key, $from, $to, $base_path) {
 
@@ -221,7 +226,7 @@ function formatCompareGitlab($url, $from, $to) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'help', 'no-dev', 'dev-only'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -242,6 +247,8 @@ function parseOpts() {
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
         'no-links' => array_key_exists('no-links', $given),
+        'no-dev' => array_key_exists('no-dev', $given),
+        'dev-only' => array_key_exists('dev-only', $given),
     );
 }
 
@@ -259,6 +266,8 @@ Options:
   --pretty   Pretty print JSON output (PHP >= 5.4.0)
   --md       Use markdown instead of plain text
   --no-links Don't include Compare links in plain text or any links in markdown
+  --no-dev   Don't include dev dependency changes. Overrides --dev-only
+  --dev-only Don't include production dependency changes, i.e. show dev changes only
 
 EOF;
 
