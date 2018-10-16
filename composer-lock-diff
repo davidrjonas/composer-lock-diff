@@ -182,8 +182,9 @@ function mustDecodeJson($json, $context) {
 }
 
 function makeCompareUrl($pkg, $diff) {
-    $func = 'formatCompare' . ucfirst(getSourceRepoType($pkg->source->url));
-    return call_user_func($func, $pkg->source->url, $diff[$pkg->name][0], $diff[$pkg->name][1]);
+    $sourceUrl = isset($pkg->source->url) ? $pkg->source->url : '';
+    $func = 'formatCompare' . ucfirst(getSourceRepoType($sourceUrl));
+    return call_user_func($func, $sourceUrl, $diff[$pkg->name][0], $diff[$pkg->name][1]);
 }
 
 function getSourceRepoType($url) {
