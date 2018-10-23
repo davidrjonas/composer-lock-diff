@@ -150,6 +150,15 @@ function load($fileish, $base_path = '') {
         $fileish = $base_path . 'composer.lock';
     }
 
+    if (isUrl($fileish)) {
+        if (! in_array(parse_url($fileish, PHP_URL_SCHEME), stream_get_wrappers())) {
+            error_log("Error: no stream wrapper to open '$fileish'");
+            exit(1);
+        }
+
+        return mustDecodeJson(file_get_contents($fileish), $fileish);
+    }
+
     if (file_exists($fileish)) {
         return mustDecodeJson(file_get_contents($fileish), $fileish);
     }
@@ -168,6 +177,11 @@ function load($fileish, $base_path = '') {
     }
 
     return mustDecodeJson(implode("\n", $lines), $fileish);
+}
+
+function isUrl($string) {
+    return filter_var($string, FILTER_VALIDATE_URL,
+        FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED | FILTER_FLAG_PATH_REQUIRED);
 }
 
 function mustDecodeJson($json, $context) {
