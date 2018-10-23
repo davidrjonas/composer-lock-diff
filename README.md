@@ -37,6 +37,8 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 - `--json`: json output
 - `--pretty`: pretty output when combined with `--json` (>=5.4 only)
 - `--no-links`: Don't include Compare links in plain text or any links in markdown
+- `--only-prod`: Only include changes from `packages`
+- `--only-dev`: Only include changes from `packages-dev`
 
 ^ File includes anything available as a [protocol stream wrapper](http://php.net/manual/en/wrappers.php) such as URLs.
 

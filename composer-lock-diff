@@ -3,12 +3,19 @@
 
 $opts = parseOpts();
 
-$prod = diff('packages', $opts['from'], $opts['to'], $opts['path']);
-$dev = diff('packages-dev', $opts['from'], $opts['to'], $opts['path']);
+$changes = array();
+
+if (! $opts['only-dev']) {
+    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path']);
+}
+
+if (! $opts['only-prod']) {
+    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path']);
+}
 
 if ($opts['json']) {
     $json_opts = ($opts['pretty']) ? JSON_PRETTY_PRINT : 0;
-    print json_encode(array('changes' => $prod, 'changes-dev' => $dev), $json_opts);
+    print json_encode($changes, $json_opts);
     return;
 }
 
@@ -24,8 +31,14 @@ if ($opts['md']) {
     ));
 }
 
-print tableize('Production Changes', $prod, $table_opts);
-print tableize('Dev Changes', $dev, $table_opts);
+$table_titles = [
+    'changes' => 'Production Changes',
+    'changes-dev' => 'Dev Changes',
+];
+
+foreach($changes as $k => $diff) {
+    print tableize($table_titles[$k], $diff, $table_opts);
+}
 
 function diff($key, $from, $to, $base_path) {
 
@@ -235,7 +248,7 @@ function formatCompareGitlab($url, $from, $to) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -256,6 +269,8 @@ function parseOpts() {
         'json' => array_key_exists('json', $given),
         'pretty' => version_compare(PHP_VERSION, '5.4.0', '>=') && array_key_exists('pretty', $given),
         'no-links' => array_key_exists('no-links', $given),
+        'only-prod' => array_key_exists('only-prod', $given),
+        'only-dev' => array_key_exists('only-dev', $given),
     );
 }
 
@@ -264,15 +279,17 @@ function usage() {
 Usage: composer-lock-diff [options]
 
 Options:
-  -h --help  Print this message
-  --path, -p Base to with which to prefix paths. Default "./"
-             E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
-  --from     The file, git ref, or git ref with filename to compare from (HEAD:composer.lock)
-  --to       The file, git ref, or git ref with filename to compare to (composer.lock)
-  --json     Format output as JSON
-  --pretty   Pretty print JSON output (PHP >= 5.4.0)
-  --md       Use markdown instead of plain text
-  --no-links Don't include Compare links in plain text or any links in markdown
+  -h --help    Print this message
+  --path, -p   Base to with which to prefix paths. Default "./"
+               E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
+  --from       The file, git ref, or git ref with filename to compare from (HEAD:composer.lock)
+  --to         The file, git ref, or git ref with filename to compare to (composer.lock)
+  --json       Format output as JSON
+  --pretty     Pretty print JSON output (PHP >= 5.4.0)
+  --md         Use markdown instead of plain text
+  --no-links   Don't include Compare links in plain text or any links in markdown
+  --only-prod  Only include changes from `packages`
+  --only-dev   Only include changes from `packages-dev`
 
 EOF;
 
