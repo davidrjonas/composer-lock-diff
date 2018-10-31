@@ -243,7 +243,7 @@ function formatCompareUnknown($url, $from, $to) {
 
 function formatCompareGithub($url, $from, $to) {
     $url = preg_replace(['/\.git$/', '/^git@github.com:/'], ['', 'https://github.com/'], $url);
-    return sprintf('%s/compare/%s...%s', preg_replace('/\.git$/', '', $url), urlencode($from), urlencode($to));
+    return sprintf('%s/compare/%s...%s', $url, urlencode($from), urlencode($to));
 }
 
 function formatCompareBitbucket($url, $from, $to) {
