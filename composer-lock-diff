@@ -248,7 +248,7 @@ function formatCompareGithub($url, $from, $to) {
 
 function formatCompareBitbucket($url, $from, $to) {
     $url = preg_replace(['/\.git$/', '/^git@bitbucket.org:/'], ['', 'https://bitbucket.org/'], $url);
-    return sprintf('%s/branches/compare/%s%%0D%s', $url, urlencode($from), urlencode($to));
+    return sprintf('%s/branches/compare/%s%%0D%s', $url, urlencode($to), urlencode($from));
 }
 
 function formatCompareGitlab($url, $from, $to) {
