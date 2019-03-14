@@ -1,6 +1,6 @@
 OPTS := ""
 
-all: test md links only-dev only-prod json json-pretty
+all: test md no-links only-dev only-prod json json-pretty
 
 test:
 	php ./composer-lock-diff --from test-data/composer.lock.from --to test-data/composer.lock.to $(OPTS)
