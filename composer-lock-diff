@@ -193,8 +193,7 @@ function load($fileish, $base_path = '') {
 }
 
 function isUrl($string) {
-    return filter_var($string, FILTER_VALIDATE_URL,
-        FILTER_FLAG_SCHEME_REQUIRED | FILTER_FLAG_HOST_REQUIRED | FILTER_FLAG_PATH_REQUIRED);
+    return filter_var($string, FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED);
 }
 
 function mustDecodeJson($json, $context) {
