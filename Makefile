@@ -1,21 +1,24 @@
 OPTS := ""
 
-all: test test-md test-no-links test-only-dev test-only-prod test-json
+all: test md links only-dev only-prod json json-pretty
 
 test:
 	php ./composer-lock-diff --from test-data/composer.lock.from --to test-data/composer.lock.to $(OPTS)
 
-test-md:
+md:
 	$(MAKE) test OPTS=--md
 
-test-no-links:
+no-links:
 	$(MAKE) test OPTS=--no-links
 
-test-only-dev:
+only-dev:
 	$(MAKE) test OPTS=--only-dev
 
-test-only-prod:
+only-prod:
 	$(MAKE) test OPTS=--only-prod
 
-test-json:
+json:
 	$(MAKE) test OPTS=--json
+
+json-pretty:
+	$(MAKE) test OPTS="--json --pretty"
