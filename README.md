@@ -46,20 +46,20 @@ Example Plain Text Table Output
 ===============================
 
 ```
-+--------------------+-------+--------+------------------------------------------------------------------+
-| Production Changes | From  | To     | Compare                                                          |
-+--------------------+-------+--------+------------------------------------------------------------------+
-| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0           |
-| hashids/hashids    | 2.0.0 | 2.0.4  | https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4  |
-| league/flysystem   | 1.0.0 | 1.0.42 | https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42 |
-| monolog/monolog    | NEW   | 1.21.0 |                                                                  |
-+--------------------+-------+--------+------------------------------------------------------------------+
++--------------------+-------+--------+------------------------------------------------------------------+-------------------------------------------+
+| Production Changes | From  | To     | Compare                                                          | Source                                    |
++--------------------+-------+--------+------------------------------------------------------------------+-------------------------------------------+
+| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0           | https://github.com/guzzle/guzzle          |
+| hashids/hashids    | 2.0.0 | 2.0.4  | https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4  | https://github.com/ivanakimov/hashids.php |
+| league/flysystem   | 1.0.0 | 1.0.42 | https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42 | https://github.com/thephpleague/flysystem |
+| monolog/monolog    | NEW   | 1.21.0 |                                                                  | https://github.com/Seldaek/monolog        |
++--------------------+-------+--------+------------------------------------------------------------------+-------------------------------------------+
 
-+------------------+--------+---------+---------+
-| Dev Changes      | From   | To      | Compare |
-+------------------+--------+---------+---------+
-| phpspec/php-diff | v1.0.2 | REMOVED |         |
-+------------------+--------+---------+---------+
++------------------+--------+---------+---------+-------------------------------------+
+| Dev Changes      | From   | To      | Compare | Source                              |
++------------------+--------+---------+---------+-------------------------------------+
+| phpspec/php-diff | v1.0.2 | REMOVED |         | https://github.com/phpspec/php-diff |
++------------------+--------+---------+---------+-------------------------------------+
 ```
 
 Markdown Table
@@ -68,30 +68,30 @@ Markdown Table
 ### Raw
 
 ```
-| Production Changes | From  | To     | Compare                                                                 |
-|--------------------|-------|--------|-------------------------------------------------------------------------|
-| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
-| hashids/hashids    | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
-| league/flysystem   | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
-| monolog/monolog    | NEW   | 1.21.0 |                                                                         |
+| Production Changes                                            | From  | To     | Compare                                                                 |
+|---------------------------------------------------------------|-------|--------|-------------------------------------------------------------------------|
+| [guzzlehttp/guzzle](https://github.com/guzzle/guzzle)         | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
+| [hashids/hashids](https://github.com/ivanakimov/hashids.php)  | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
+| [league/flysystem](https://github.com/thephpleague/flysystem) | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
+| [monolog/monolog](https://github.com/Seldaek/monolog)         | NEW   | 1.21.0 |                                                                         |
 
-| Dev Changes      | From   | To      | Compare |
-|------------------|--------|---------|---------|
-| phpspec/php-diff | v1.0.2 | REMOVED |         |
+| Dev Changes                                             | From   | To      | Compare |
+|---------------------------------------------------------|--------|---------|---------|
+| [phpspec/php-diff](https://github.com/phpspec/php-diff) | v1.0.2 | REMOVED |         |
 ```
 
 ### Rendered
 
-| Production Changes | From  | To     | Compare                                                                 |
-|--------------------|-------|--------|-------------------------------------------------------------------------|
-| guzzlehttp/guzzle  | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
-| hashids/hashids    | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
-| league/flysystem   | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
-| monolog/monolog    | NEW   | 1.21.0 |                                                                         |
+| Production Changes                                            | From  | To     | Compare                                                                 |
+|---------------------------------------------------------------|-------|--------|-------------------------------------------------------------------------|
+| [guzzlehttp/guzzle](https://github.com/guzzle/guzzle)         | 6.2.0 | 6.3.0  | [...](https://github.com/guzzle/guzzle/compare/6.2.0...6.3.0)           |
+| [hashids/hashids](https://github.com/ivanakimov/hashids.php)  | 2.0.0 | 2.0.4  | [...](https://github.com/ivanakimov/hashids.php/compare/2.0.0...2.0.4)  |
+| [league/flysystem](https://github.com/thephpleague/flysystem) | 1.0.0 | 1.0.42 | [...](https://github.com/thephpleague/flysystem/compare/1.0.0...1.0.42) |
+| [monolog/monolog](https://github.com/Seldaek/monolog)         | NEW   | 1.21.0 |                                                                         |
 
-| Dev Changes      | From   | To      | Compare |
-|------------------|--------|---------|---------|
-| phpspec/php-diff | v1.0.2 | REMOVED |         |
+| Dev Changes                                             | From   | To      | Compare |
+|---------------------------------------------------------|--------|---------|---------|
+| [phpspec/php-diff](https://github.com/phpspec/php-diff) | v1.0.2 | REMOVED |         |
 
 Contributors
 ============
@@ -105,4 +105,5 @@ Thanks to everyone who has shared ideas and code! In particular,
 - https://github.com/cafferata
 - https://github.com/ihor-sviziev
 - https://github.com/wiese
+- https://github.com/enomotodev
 

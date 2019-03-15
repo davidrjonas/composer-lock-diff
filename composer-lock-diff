@@ -47,14 +47,14 @@ function diff($key, $from, $to, $base_path) {
     $data = load($from, $base_path);
 
     foreach($data->$key as $pkg) {
-        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
+        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '', sourceUrl($pkg));
     }
 
     $data = load($to, $base_path);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
-            $pkgs[$pkg->name] = array('NEW', version($pkg), '');
+            $pkgs[$pkg->name] = array('NEW', version($pkg), '', sourceUrl($pkg));
             continue;
         }
 
@@ -80,32 +80,50 @@ function version($pkg)
     return $version;
 }
 
+function sourceUrl($pkg) {
+    if (empty($pkg->source->url)) {
+        return '';
+    }
+
+    return str_replace('.git', '', $pkg->source->url);
+}
+
 function tableize($header, $data, $opts = array()) {
     if (empty($data)) return '';
 
     $opts = array_merge(array('capped' => true, 'joint' => '+'), $opts);
 
+    array_walk($data, function(&$values, $key) {
+        array_unshift($values, $key);
+    });
+
     if ($opts['no-links']) {
         array_walk($data, function(&$values) {
-            unset($values[2]);
+            unset($values[3]);
+            unset($values[4]);
         });
     } else {
         if (array_key_exists('url_formatter', $opts)) {
             $formatter = $opts['url_formatter'];
             array_walk($data, function(&$values) use ($formatter) {
-                $values[2] = call_user_func($formatter, $values[2], '...');
+                $values[0] = call_user_func($formatter, $values[4], $values[0]);
+                $values[3] = call_user_func($formatter, $values[3], '...');
+                unset($values[4]);
             });
         }
     }
 
     $titles = array($header, 'From', 'To');
-    if (! $opts['no-links']) array_push($titles, 'Compare');
-
-    $widths = array(maxLength(array_merge(array($header), array_keys($data))));
+    if (! $opts['no-links']) {
+        array_push($titles, 'Compare');
+        if (! array_key_exists('url_formatter', $opts)) {
+            array_push($titles, 'Source');
+        }
+    }
 
     $count = count(reset($data));
     for($i = 0; $i < $count; $i++) {
-        $widths[] = max(strlen($titles[$i + 1]), maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data))));
+        $widths[] = max(strlen($titles[$i]), maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data))));
     }
 
     if ($opts['capped']) {
@@ -116,7 +134,7 @@ function tableize($header, $data, $opts = array()) {
     $lines[] = separatorLine($widths, $opts['joint']);
 
     foreach($data as $key => $v) {
-        $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
+        $lines[] = tabelizeLine($v, $widths);
     }
 
     if ($opts['capped']) {
