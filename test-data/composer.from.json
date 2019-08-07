@@ -1,0 +1,21 @@
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@gitlab.com:pmjones/fake.git"
+        }
+    ],
+    "require": {
+        "caseysoftware/marvel-helper": "=1.1.2",
+        "doctrine/dbal": "=2.2.0",
+        "ircmaxell/random-lib": "=1.1.0",
+        "ircmaxell/security-lib": "=1.0.0",
+        "monolog/monolog": "=1.10.0",
+        "payintegrator/afterpay": "=1.5.0",
+        "pmjones/fake": "=0.0.1"
+    },
+    "require-dev": {
+        "mockery/mockery": "=0.9.4",
+        "phpunit/phpunit": "=5.0.0"
+    }
+}
