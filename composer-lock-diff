@@ -219,6 +219,10 @@ function getSourceRepoType($url) {
     if (preg_match('/^git@github.com:(.*)\.git$/', $url)) {
         return 'github';
     }
+    if (preg_match('/^git@gitlab\..+:.+\.git$/', $url)) {
+        return 'gitlab';
+    }
+
     if (! preg_match('/^http/i', $url)) {
         return 'unknown';
     }
@@ -251,7 +255,11 @@ function formatCompareBitbucket($url, $from, $to) {
 }
 
 function formatCompareGitlab($url, $from, $to) {
-    return sprintf('%s/compare/%s...%s', preg_replace('/\.git$/', '', $url), urlencode($from), urlencode($to));
+    if (strpos($url, 'http') === false) {
+        $url = preg_replace('/^git@(gitlab\.[^:]+):/', 'https://$1/', $url);
+    }
+    $url = preg_replace('/\.git$/', '', $url);
+    return sprintf('%s/compare/%s...%s', $url, urlencode($from), urlencode($to));
 }
 
 function parseOpts() {
