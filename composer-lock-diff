@@ -213,10 +213,10 @@ function makeCompareUrl($pkg, $diff) {
 }
 
 function getSourceRepoType($url) {
-    if (preg_match('/^git@bitbucket.org:(.*)\.git$/', $url)) {
+    if (preg_match('/^git@bitbucket\..+:.+\.git$/', $url)) {
         return 'bitbucket';
     }
-    if (preg_match('/^git@github.com:(.*)\.git$/', $url)) {
+    if (preg_match('/^git@github\..+:.+\.git$/', $url)) {
         return 'github';
     }
     if (preg_match('/^git@gitlab\..+:.+\.git$/', $url)) {
@@ -245,12 +245,18 @@ function formatCompareUnknown($url, $from, $to) {
 }
 
 function formatCompareGithub($url, $from, $to) {
-    $url = preg_replace(['/\.git$/', '/^git@github.com:/'], ['', 'https://github.com/'], $url);
+    if (strpos($url, 'http') === false) {
+        $url = preg_replace('/^git@(github\.[^:]+):/', 'https://$1/', $url);
+    }
+    $url = preg_replace('/\.git$/', '', $url);
     return sprintf('%s/compare/%s...%s', $url, urlencode($from), urlencode($to));
 }
 
 function formatCompareBitbucket($url, $from, $to) {
-    $url = preg_replace(['/\.git$/', '/^git@bitbucket.org:/'], ['', 'https://bitbucket.org/'], $url);
+    if (strpos($url, 'http') === false) {
+        $url = preg_replace('/^git@(bitbucket\.[^:]+):/', 'https://$1/', $url);
+    }
+    $url = preg_replace('/\.git$/', '', $url);
     return sprintf('%s/branches/compare/%s%%0D%s', $url, urlencode($to), urlencode($from));
 }
 
