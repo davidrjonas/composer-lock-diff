@@ -71,7 +71,7 @@ function diff($key, $from, $to, $base_path) {
 
 function version($pkg)
 {
-    if(substr($pkg->version,0,4) == 'dev-') {
+    if(substr($pkg->version,0,4) == 'dev-' && isset($pkg->source) && isset($pkg->source->reference)) {
         $version = substr($pkg->source->reference,0,7) ?: '';
     } else {
         $version = (string) $pkg->version;
