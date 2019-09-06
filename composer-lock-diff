@@ -222,6 +222,9 @@ function getSourceRepoType($url) {
     if (preg_match('/^git@gitlab\..+:.+\.git$/', $url)) {
         return 'gitlab';
     }
+    if (preg_match('/^git@git\.drupal\..+:.+\.git$/', $url)) {
+      return 'drupal';
+    }
 
     if (! preg_match('/^http/i', $url)) {
         return 'unknown';
@@ -235,6 +238,8 @@ function getSourceRepoType($url) {
         return 'bitbucket';
     } elseif (strpos($host, 'gitlab') !== false) {
         return 'gitlab';
+    } elseif (strpos($host, 'drupalcode') !== false) {
+      return 'drupal';
     }
 
     return 'unknown';
@@ -266,6 +271,11 @@ function formatCompareGitlab($url, $from, $to) {
     }
     $url = preg_replace('/\.git$/', '', $url);
     return sprintf('%s/compare/%s...%s', $url, urlencode($from), urlencode($to));
+}
+
+function formatCompareDrupal($url, $from, $to) {
+  $url = preg_replace('/\.git$/', '', $url);
+  return sprintf('%s/compare/8.x-%s...8.x-%s', $url, substr(urlencode($from), 0, -2), substr(urlencode($to), 0, -2));
 }
 
 function parseOpts() {
