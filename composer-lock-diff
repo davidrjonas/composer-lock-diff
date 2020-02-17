@@ -180,7 +180,7 @@ function load($fileish, $base_path = '') {
         $fileish .= ':' . $base_path . 'composer.lock';
     }
 
-    $lines = '';
+    $lines = array();
 
     exec('git show '. escapeshellarg($fileish), $lines, $exit);
 
