@@ -102,7 +102,7 @@ New features are always welcome! Follow these guidelines
 - Make sure there is a way to test the feature.
 - Test with PHP 5.3 (I'm serious!), >=5.4<7, 7.current. Docker is helpful, particularly for the older versions. Just run the ubuntu:12.04 image and install php for 5.3 and 14.04 for 5.6. I can help if you're having trouble.
 
-The `Makefile` has some test cases. Run `make | less` and inspect the output. If you need specific versions or more information, continue reading.
+The [Makefile](Makefile) has some test cases. Run `make | less` and inspect the output. If you need specific versions or more information, continue reading.
 
 To run using the test data manually simply point the `--to` and `--from` args at the lock files,
 
@@ -164,7 +164,7 @@ Add a test case to test-data/
 Test Cases
 ----------
 
-See `Makefile`
+See [Makefile](Makefile).
 
 - `comopser-lock-diff` # no args
 - `composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock`
