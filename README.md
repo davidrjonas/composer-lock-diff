@@ -102,7 +102,9 @@ New features are always welcome! Follow these guidelines
 - Make sure there is a way to test the feature.
 - Test with PHP 5.3 (I'm serious!), >=5.4<7, 7.current. Docker is helpful, particularly for the older versions. Just run the ubuntu:12.04 image and install php for 5.3 and 14.04 for 5.6. I can help if you're having trouble.
 
-To run using the test data simply point the `--to` and `--from` args at the lock files,
+The `Makefile` has some test cases. Run `make | less` and inspect the output. If you need specific versions or more information, continue reading.
+
+To run using the test data manually simply point the `--to` and `--from` args at the lock files,
 
 ```php
 php ./composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock
@@ -149,9 +151,9 @@ Add a test case to test-data/
 - Copy `../test-data/composer.from.json` as `composer.json` and `../test-data/composer.from.lock` as `composer.lock`.
 - Commit them.
 - Run `composer install`
-- The generated `composer.lock` should look similar to `../test-data/composer.from.lock` but there will be differences due to transient dependencies. No real way around that. Use `composer-lock-diff` to make sure none of the named packages change versions.
 - Add your _pre_ case to `composer.json`. Use an exact version.
-- Generate a new lock file. Commit it.
+- Run `composer update`.
+- The generated `composer.lock` should look similar to `../test-data/composer.from.lock` but there will be differences due to transient dependencies. No real way around that. Use `composer-lock-diff` to make sure none of the named packages change versions and your new case is there.
 - Copy `composer.json` to `../test-data/composer.from.json` and `composer.lock` to `composer.from.lock`.
 - Copy `../test-data/composer.to.json` as `composer.json`.
 - Add your _post_ case to `composer.json`. Again, exact versions are best.
@@ -161,6 +163,8 @@ Add a test case to test-data/
 
 Test Cases
 ----------
+
+See `Makefile`
 
 - `comopser-lock-diff` # no args
 - `composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock`
