@@ -93,6 +93,92 @@ Markdown Table
 |------------------|--------|---------|---------|
 | phpspec/php-diff | v1.0.2 | REMOVED |         |
 
+Development
+===========
+
+New features are always welcome! Follow these guidelines
+
+- Try to match the style of the code that already exists, even if it isn't _your_ style (sorry!).
+- Make sure there is a way to test the feature.
+- Test with PHP 5.3 (I'm serious!), >=5.4<7, 7.current. Docker is helpful, particularly for the older versions. Just run the ubuntu:12.04 image and install php for 5.3 and 14.04 for 5.6. I can help if you're having trouble.
+
+To run using the test data simply point the `--to` and `--from` args at the lock files,
+
+```php
+php ./composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock
+```
+
+Docker is very helpful for targeting a specific version of php and/or composer,
+
+```php
+docker run --rm -it -v "$PWD":/src -w /src php:7.4.2 \
+  php ./composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock
+```
+
+Sometimes you want to test the git related functions. To do that first I make a temporary repo. Then I copy into it `test-data/composer.from.lock` as `composer.lock` to set the previous state and `test-data/composer.to.json` as `composer.json` for the future state. I commit those then run `composer-lock-diff` with the options I want to test and visually inspect the results.
+
+```bash
+mkdir tmp && cd tmp
+git init
+cp ../test-data/composer.to.json composer.json
+cp ../test-data/composer.from.lock composer.lock
+git add .
+git commit -m "initial"
+
+composer update
+# or
+docker run --rm -it -v "$PWD":/src -w /src composer:latest php composer update
+
+php ../composer-lock-diff
+
+# or, if you want to use docker, you'll need git
+cd ..
+docker run --rm -it -v "$PWD":/src -w /src php:7.4.2 bash
+apt-get update && apt-get install -y git
+# You may want composer as well,
+curl -OL https://getcomposer.org/download/1.9.3/composer.phar
+cd tmp
+php ../composer.phar update
+php ../composer-lock-diff
+```
+
+Add a test case to test-data/
+-----------------------------
+
+- Make a new, temporary git repo in `./tmp`
+- Copy `../test-data/composer.from.json` as `composer.json` and `../test-data/composer.from.lock` as `composer.lock`.
+- Commit them.
+- Run `composer install`
+- The generated `composer.lock` should look similar to `../test-data/composer.from.lock` but there will be differences due to transient dependencies. No real way around that. Use `composer-lock-diff` to make sure none of the named packages change versions.
+- Add your _pre_ case to `composer.json`. Use an exact version.
+- Generate a new lock file. Commit it.
+- Copy `composer.json` to `../test-data/composer.from.json` and `composer.lock` to `composer.from.lock`.
+- Copy `../test-data/composer.to.json` as `composer.json`.
+- Add your _post_ case to `composer.json`. Again, exact versions are best.
+- Generate a new lock file.
+- Use composer-lock-diff to test your feature.
+- When you're happy with it, copy `composer.json` to `../test-data/composer.to.json` and `composer.lock` to `../test-data/composer.to.lock`.
+
+Test Cases
+----------
+
+- `comopser-lock-diff` # no args
+- `composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock`
+- `composer-lock-diff --path ./test-data/`
+- `composer-lock-diff --from <git ref>` # this gets tested with 'no args'
+- `composer-lock-diff --from <git ref with filename>`
+- `composer-lock-diff --to <git ref>`
+- `composer-lock-diff --to <git ref with filename>`
+- `composer-lock-diff --only-dev`
+- `composer-lock-diff --only-prod`
+- `composer-lock-diff --no-links`
+- `composer-lock-diff --json`
+- `composer-lock-diff --json --pretty`
+- `composer-lock-diff --md`
+- `composer-lock-diff --md --no-links`
+
+If anyone can help test with Windows that would be very much appreciated!
+
 Contributors
 ============
 
