@@ -13,9 +13,28 @@ Install
 
 ```bash
 composer global require davidrjonas/composer-lock-diff:^1.0@dev
+
+# With zsh, do `rehash` to make it known to the shell.
+
+# If `composer-lock-diff` is not found, make sure ~/.composer/vendor/bin is in your `$PATH` env variable.
+# You'll need to restart your shell if you make this change.
+echo 'PATH=$PATH:$HOME/.composer/vendor/bin' >> ~/.profile
 ```
 
 Or just copy the 'composer-lock-diff' to `/usr/local/bin`.
+
+### zsh
+
+If you're running zsh and you need to add `~/.composer/vendor/bin` to your
+PATH, use the command above but add the following to `.zprofile`. This will
+keep everything working in sh, bash, and zsh. See
+https://superuser.com/questions/187639/zsh-not-hitting-profile
+
+```
+emulate sh
+. ~/.profile
+emulate zsh
+```
 
 Usage
 =====
