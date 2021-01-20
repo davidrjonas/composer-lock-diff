@@ -12,7 +12,7 @@ Install
 -------
 
 ```bash
-composer global require davidrjonas/composer-lock-diff:^1.0@dev
+composer global require davidrjonas/composer-lock-diff:^1.0
 
 # With zsh, run `rehash` to make it known to the shell.
 
