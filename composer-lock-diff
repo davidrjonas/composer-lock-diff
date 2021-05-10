@@ -6,11 +6,11 @@ $opts = parseOpts();
 $changes = array();
 
 if (! $opts['only-dev']) {
-    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path']);
+    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path'], $opts['scm-type']);
 }
 
 if (! $opts['only-prod']) {
-    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path']);
+    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path'], $opts['scm-type']);
 }
 
 if ($opts['json']) {
@@ -40,17 +40,17 @@ foreach($changes as $k => $diff) {
     print tableize($table_titles[$k], $diff, $table_opts);
 }
 
-function diff($key, $from, $to, $base_path) {
+function diff($key, $from, $to, $base_path, $scm) {
 
     $pkgs = array();
 
-    $data = load($from, $base_path);
+    $data = load($from, $base_path, $scm);
 
     foreach($data->$key as $pkg) {
         $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
     }
 
-    $data = load($to, $base_path);
+    $data = load($to, $base_path, $scm);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
@@ -150,7 +150,7 @@ function urlFormatterMd($url, $text) {
     return sprintf('[%s](%s)', $text, $url);
 }
 
-function load($fileish, $base_path = '') {
+function load($fileish, $base_path = '', $scm) {
     $orig = $fileish;
 
     if (empty($base_path)) {
@@ -176,20 +176,38 @@ function load($fileish, $base_path = '') {
         return mustDecodeJson(file_get_contents($fileish), $fileish);
     }
 
-    if (strpos($orig, ':') === false) {
-        $fileish .= ':' . $base_path . 'composer.lock';
+    //try to find scm revision
+    if (strtolower($scm) == 'git'){
+        if (strpos($orig, ':') === false) {
+            $fileish .= ':' . $base_path . 'composer.lock';
+        }
+
+        $lines = array();
+        exec('git show '. escapeshellarg($fileish), $lines, $exit);
+
+        if ($exit !== 0) {
+            error_log("Error: cannot open $orig or find it in git as $fileish");
+            exit(1);
+        }
+
+        return mustDecodeJson(implode("\n", $lines), $fileish);
     }
 
-    $lines = array();
+    elseif (strtolower($scm) == 'svn'){
+        if (strpos($orig, '@') === false) {
+            $fileish = $base_path . 'composer.lock@'.$fileish;
+        }
+        exec('svn cat '. escapeshellarg($fileish), $lines, $exit);
 
-    exec('git show '. escapeshellarg($fileish), $lines, $exit);
-
-    if ($exit !== 0) {
-        error_log("Error: cannot open $orig or find it in git as $fileish");
-        exit(1);
+        if ($exit !== 0) {
+            error_log("Error: cannot open $orig or find it in svn as $fileish");
+            exit(1);
+        }
+        return mustDecodeJson(implode("\n", $lines), $fileish);
     }
 
-    return mustDecodeJson(implode("\n", $lines), $fileish);
+    error_log("Error: unhandled SCM $scm");
+    exit(1);
 }
 
 function isUrl($string) {
@@ -279,7 +297,7 @@ function formatCompareDrupal($url, $from, $to) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'scm:'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -292,8 +310,10 @@ function parseOpts() {
         usage();
     }
 
+    $path = array_key_exists('path', $given) ? $given['path'] : '';
+
     return array(
-        'path' => array_key_exists('path', $given) ? $given['path'] : '',
+        'path' => $path,
         'from' => array_key_exists('from', $given) ? $given['from'] : 'HEAD',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
         'md' => array_key_exists('md', $given),
@@ -302,7 +322,28 @@ function parseOpts() {
         'no-links' => array_key_exists('no-links', $given),
         'only-prod' => array_key_exists('only-prod', $given),
         'only-dev' => array_key_exists('only-dev', $given),
+        'scm-type' => array_key_exists('scm', $given) ? $given['scm'] : scmDetect($path),
     );
+}
+
+function scmDetect($base_path){
+    if (empty($base_path)) {
+        $base_path = '.' . DIRECTORY_SEPARATOR;
+    } else {
+        $base_path = rtrim($base_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+
+    $base_path = realpath($base_path);
+    while(!empty($base_path) && $base_path !== '/' ){
+        if(is_dir($base_path.'/.svn')){
+            return 'svn';
+        }elseif(is_dir($base_path.'/.git')){
+            return 'git';
+        }
+        $base_path = dirname($base_path);
+    }
+
+    return 'unknown';
 }
 
 function usage() {
