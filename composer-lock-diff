@@ -6,11 +6,11 @@ $opts = parseOpts();
 $changes = array();
 
 if (! $opts['only-dev']) {
-    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path'], $opts['scm-type']);
+    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path'], $opts['vcs']);
 }
 
 if (! $opts['only-prod']) {
-    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path'], $opts['scm-type']);
+    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path'], $opts['vcs']);
 }
 
 if ($opts['json']) {
@@ -40,17 +40,17 @@ foreach($changes as $k => $diff) {
     print tableize($table_titles[$k], $diff, $table_opts);
 }
 
-function diff($key, $from, $to, $base_path, $scm) {
+function diff($key, $from, $to, $base_path, $vcs) {
 
     $pkgs = array();
 
-    $data = load($from, $base_path, $scm);
+    $data = load($from, $base_path, $vcs);
 
     foreach($data->$key as $pkg) {
         $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
     }
 
-    $data = load($to, $base_path, $scm);
+    $data = load($to, $base_path, $vcs);
 
     foreach($data->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
@@ -150,7 +150,7 @@ function urlFormatterMd($url, $text) {
     return sprintf('[%s](%s)', $text, $url);
 }
 
-function load($fileish, $base_path = '', $scm) {
+function load($fileish, $base_path = '', $vcs) {
     $orig = $fileish;
 
     if (empty($base_path)) {
@@ -176,8 +176,8 @@ function load($fileish, $base_path = '', $scm) {
         return mustDecodeJson(file_get_contents($fileish), $fileish);
     }
 
-    //try to find scm revision
-    if (strtolower($scm) == 'git'){
+    //try to find vcs revision
+    if (strtolower($vcs) == 'git'){
         if (strpos($orig, ':') === false) {
             $fileish .= ':' . $base_path . 'composer.lock';
         }
@@ -193,7 +193,7 @@ function load($fileish, $base_path = '', $scm) {
         return mustDecodeJson(implode("\n", $lines), $fileish);
     }
 
-    elseif (strtolower($scm) == 'svn'){
+    elseif (strtolower($vcs) == 'svn'){
         if (strpos($orig, '@') === false) {
             $fileish = $base_path . 'composer.lock@'.$fileish;
         }
@@ -206,7 +206,7 @@ function load($fileish, $base_path = '', $scm) {
         return mustDecodeJson(implode("\n", $lines), $fileish);
     }
 
-    error_log("Error: unhandled SCM $scm");
+    error_log("Error: unhandled VCS $vcs");
     exit(1);
 }
 
@@ -297,7 +297,7 @@ function formatCompareDrupal($url, $from, $to) {
 }
 
 function parseOpts() {
-    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'scm:'));
+    $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'vcs:'));
 
     foreach(array('help' => 'h', 'path' => 'p') as $long => $short) {
         if (array_key_exists($short, $given)) {
@@ -322,11 +322,11 @@ function parseOpts() {
         'no-links' => array_key_exists('no-links', $given),
         'only-prod' => array_key_exists('only-prod', $given),
         'only-dev' => array_key_exists('only-dev', $given),
-        'scm-type' => array_key_exists('scm', $given) ? $given['scm'] : scmDetect($path),
+        'vcs' => array_key_exists('vcs', $given) ? $given['vcs'] : vcsDetect($path),
     );
 }
 
-function scmDetect($base_path){
+function vcsDetect($base_path){
     if (empty($base_path)) {
         $base_path = '.' . DIRECTORY_SEPARATOR;
     } else {
@@ -362,6 +362,7 @@ Options:
   --no-links   Don't include Compare links in plain text or any links in markdown
   --only-prod  Only include changes from `packages`
   --only-dev   Only include changes from `packages-dev`
+  --vcs        Force vcs (git, svn, ...). Default auto-detect from path
 
 EOF;
 
