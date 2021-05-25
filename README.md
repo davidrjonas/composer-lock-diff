@@ -47,6 +47,7 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 - `--no-links`: Don't include Compare links in plain text or any links in markdown
 - `--only-prod`: Only include changes from `packages`
 - `--only-dev`: Only include changes from `packages-dev`
+- `--vcs`: Force vcs (git, svn, ...). Default auto-detect from path
 
 ^ File includes anything available as a [protocol stream wrapper](http://php.net/manual/en/wrappers.php) such as URLs.
 
@@ -204,4 +205,5 @@ Thanks to everyone who has shared ideas and code! In particular,
 - https://github.com/ihor-sviziev
 - https://github.com/wiese
 - https://github.com/jibran
+- https://github.com/soleuu
 
