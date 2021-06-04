@@ -332,22 +332,37 @@ function parseOpts() {
     );
 }
 
-function vcsDetect($base_path){
+function dirnameSafe($path) {
+    $parent = dirname($path);
+    return ($parent != $path && !empty($parent)) ? $parent : false;
+}
+
+function joinPath(/* path parts */) {
+    return implode(DIRECTORY_SEPARATOR, array_map(function($part) {
+        return trim($part, DIRECTORY_SEPARATOR);
+    }, func_get_args()));
+}
+
+function vcsDetect($base_path) {
     if (empty($base_path)) {
-        $base_path = '.' . DIRECTORY_SEPARATOR;
-    } else {
-        $base_path = rtrim($base_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $base_path = '.';
     }
 
+    // > Trailing delimiters, such as \ and /, are also removed
+    // > returns false on failure, e.g. if the file does not exist.
     $base_path = realpath($base_path);
-    while(!empty($base_path) && $base_path !== '/' ){
-        if(is_dir($base_path.'/.svn')){
-            return 'svn';
-        }elseif(is_dir($base_path.'/.git')){
+    if ($base_path === false) return 'unknown';
+
+    $tries = 10;
+    do {
+        if(is_dir(joinPath($base_path, '.git'))) {
             return 'git';
+        } elseif(is_dir(joinPath($base_path, '.svn'))) {
+            return 'svn';
         }
-        $base_path = dirname($base_path);
-    }
+
+        $base_path = dirnameSafe($base_path);
+    } while($base_path !== false && --$tries > 0);
 
     return 'unknown';
 }
