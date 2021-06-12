@@ -300,6 +300,120 @@ function formatCompareDrupal($url, $from, $to) {
   return sprintf('%s/compare/8.x-%s...8.x-%s', $url, substr(urlencode($from), 0, -2), substr(urlencode($to), 0, -2));
 }
 
+//
+// ## VCSes ####################
+//
+
+function getVcses() {
+    return array('git', 'svn');
+}
+
+function vcsDetectGit($_fileish) {
+    // Is there a git executable?
+    exec('git --version', null, $exit);
+    if ($exit !== 0) return array(false, "'git --version' exited with non-zero code '$exit'");
+
+    // Does this look like a git repo?
+    $path = findUp('.', '.git');
+    return array(!! $path, ($path) ? false : "Could not find .git in current directory or parents");
+}
+
+function vcsLoadGit($fileish, $base_path, $_default_fileish) {
+    // We don't care about $default_fileish here - we are expected to load from
+    // git and we must make a filename to do that.
+    if (empty($fileish)) {
+        $fileish = 'HEAD';
+    }
+
+    if (strpos($fileish, ':') === false) {
+        $fileish .= ':' . $base_path . 'composer.lock';
+    }
+
+    $lines = array();
+    exec('git show ' . escapeshellarg($fileish), $lines, $exit);
+
+    if ($exit !== 0) {
+        return array('', "'git show $fileish' exited with non-zero code '$exit'");
+    }
+
+    return array(mustDecodeJson(implode("\n", $lines), $fileish), false);
+}
+
+function vcsDetectSvn($fileish, $base_path, $default_fileish) {
+    // Is there a git executable?
+    exec('svn --version', null, $exit);
+    if ($exit !== 0) return array(false, "'svn --version' exited with non-zero code '$exit'");
+
+    if (strpos('svn://', $fileish) === 0) {
+        return array(true, false);
+    }
+
+    // Does this look like a svn repo?
+    $path = findUp('.', '.svn');
+    return array(!! $path, ($path) ? false : "Could not find .svn in current directory or parents");
+}
+
+function vcsLoadSvn($fileish, $base_path, $_default_fileish) {
+    // We don't care about $default_fileish here - we are expected to load from
+    // svn and we must make a filename to do that.
+    if (empty($fileish)) {
+        $fileish = 'BASE';
+    }
+
+    // If $fileish starts with a url scheme that 'svn cat' can handle or ^, or
+    // if it contains a @, assume it is already a proper svn identifier.
+    // - file:// http:// https:// svn:// svn+ssh:// => absolute url of
+    //   repository (file/http/https may have been handled with stream wrappers
+    //   if '--vcs svn' wasn't specified)
+    // - ^ => relative url from current workspace repository
+    // - @ => repository url with revision
+    if (preg_match('#^\^|^(file|http|https|svn|svn\+ssh)://|@#i', $fileish) === 0) {
+        $fileish = $base_path . 'composer.lock@'.$fileish;
+    }
+
+    exec('svn cat ' . escapeshellarg($fileish), $lines, $exit);
+
+    if ($exit !== 0) {
+        return array('', "'svn cat $fileish' exited with non-zero code '$exit'");
+    }
+
+    return array(mustDecodeJson(implode("\n", $lines), $fileish), false);
+}
+
+function findUp($path, $filename, $tries = 10) {
+    if (empty($path)) {
+        $path = '.';
+    }
+
+    // > Trailing delimiters, such as \ and /, are also removed
+    // > returns false on failure, e.g. if the file does not exist.
+    $path = realpath($path);
+    if ($path === false) return false;
+
+    do {
+        $candidate = joinPath($path, $filename);
+
+        if (file_exists($candidate)) {
+            return $candidate;
+        }
+
+        $path = dirnameSafe($path);
+    } while ($path !== false && --$tries > 0);
+
+    return false;
+}
+
+function dirnameSafe($path) {
+    $parent = dirname($path);
+    return ($parent != $path && !empty($parent)) ? $parent : false;
+}
+
+function joinPath(/* path parts */) {
+    return implode(DIRECTORY_SEPARATOR, array_map(function($part) {
+        return trim($part, DIRECTORY_SEPARATOR);
+    }, func_get_args()));
+}
+
 function parseOpts() {
     $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'vcs:'));
 
