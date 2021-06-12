@@ -4,13 +4,15 @@
 $opts = parseOpts();
 
 $changes = array();
+$data_from = load($opts['from'], $opts['path'], $opts['vcs'], '');
+$data_to   = load($opts['to'],   $opts['path'], $opts['vcs'], 'composer.lock');
 
 if (! $opts['only-dev']) {
-    $changes['changes'] = diff('packages', $opts['from'], $opts['to'], $opts['path'], $opts['vcs']);
+    $changes['changes'] = diff('packages', $data_from, $data_to);
 }
 
 if (! $opts['only-prod']) {
-    $changes['changes-dev'] = diff('packages-dev', $opts['from'], $opts['to'], $opts['path'], $opts['vcs']);
+    $changes['changes-dev'] = diff('packages-dev', $data_from, $data_to);
 }
 
 if ($opts['json']) {
@@ -31,28 +33,24 @@ if ($opts['md']) {
     ));
 }
 
-$table_titles = [
+$table_titles = array(
     'changes' => 'Production Changes',
     'changes-dev' => 'Dev Changes',
-];
+);
 
 foreach($changes as $k => $diff) {
     print tableize($table_titles[$k], $diff, $table_opts);
 }
 
-function diff($key, $from, $to, $base_path, $vcs) {
+function diff($key, $data_from, $data_to) {
 
     $pkgs = array();
 
-    $data = load($from, $base_path, $vcs);
-
-    foreach($data->$key as $pkg) {
+    foreach($data_from->$key as $pkg) {
         $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
     }
 
-    $data = load($to, $base_path, $vcs);
-
-    foreach($data->$key as $pkg) {
+    foreach($data_to->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
             $pkgs[$pkg->name] = array('NEW', version($pkg), '');
             continue;
@@ -150,68 +148,72 @@ function urlFormatterMd($url, $text) {
     return sprintf('[%s](%s)', $text, $url);
 }
 
-function load($fileish, $base_path = '', $vcs) {
-    $orig = $fileish;
+// $fileish is what the user actually requested.
+// $default_fileish is what it should be if $fileish is empty
+function load($fileish, $base_path, $force_vcs, $default_fileish) {
+    $loaders = ($force_vcs || (empty($fileish) && empty($default_fileish))) ? array() : array('loadFile');
 
-    if (empty($base_path)) {
-        $base_path = '.' . DIRECTORY_SEPARATOR;
-    } else {
-        $base_path = rtrim($base_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-    }
+    $vcses = $force_vcs ? array($force_vcs) : getVcses();
+    $errors = array();
 
-    if (empty($fileish)) {
-        $fileish = $base_path . 'composer.lock';
-    }
-
-    if (strpos('svn://', $fileish) !== 0 && isUrl($fileish)) {
-        if (! in_array(parse_url($fileish, PHP_URL_SCHEME), stream_get_wrappers())) {
-            error_log("Error: no stream wrapper to open '$fileish'");
-            exit(1);
+    foreach($vcses as $vcs) {
+        $detector = 'vcsDetect' . ucfirst($vcs);
+        if($vcs != $force_vcs && function_exists($detector)) {
+            list($available, $err) = call_user_func($detector, $fileish, $base_path, $default_fileish);
+            if ($err) {
+                $errors[] = $err;
+                continue;
+            }
+            if (!$available) continue;
         }
-
-        return mustDecodeJson(file_get_contents($fileish), $fileish);
+        $loaders[] = 'vcsLoad' . ucfirst($vcs);
     }
 
-    if (strpos('svn://', $fileish) !== 0 && file_exists($fileish)) {
-        return mustDecodeJson(file_get_contents($fileish), $fileish);
+    if (empty($loaders)) {
+        error_log(implode("\n", $errors));
+        if ($force_vcs) {
+            error_log("Requested vcs '$force_vcs' not installed or otherwise unavailable");
+        } else {
+            error_log("No loaders were found; perhaps your vcs cli tools are not installed, not in PATH, or otherwise unavailable");
+        }
+        exit(1);
     }
 
-    //try to find vcs revision
-    if ($vcs == 'git'){
-        if (strpos($orig, ':') === false) {
-            $fileish .= ':' . $base_path . 'composer.lock';
+    $errors = array();
+    foreach($loaders as $loader) {
+        list($result, $err) = call_user_func_array($loader, array($fileish, $base_path, $default_fileish));
+        if (empty($err)) {
+            return $result;
         }
-
-        $lines = array();
-        exec('git show '. escapeshellarg($fileish), $lines, $exit);
-
-        if ($exit !== 0) {
-            error_log("Error: cannot open $orig or find it in git as $fileish");
-            exit(1);
-        }
-
-        return mustDecodeJson(implode("\n", $lines), $fileish);
+        $errors[] = "Failed to find '$fileish' with '$loader'; $err";
     }
 
-    elseif ($vcs == 'svn'){
-        # explaination:
-        #  http:// https:// svn://  => absolute url of repository (http/https already handled before)
-        #  ^ => relative url from current workspace repository
-        #  @ => repository url with version
-        if (preg_match('#^\^|^svn://|@#', $orig) === 0) {
-            $fileish = $base_path . 'composer.lock@'.$fileish;
-        }
-        exec('svn cat '. escapeshellarg($fileish), $lines, $exit);
-
-        if ($exit !== 0) {
-            error_log("Error: cannot open $orig or find it in svn as $fileish");
-            exit(1);
-        }
-        return mustDecodeJson(implode("\n", $lines), $fileish);
+    foreach($errors as $e) {
+        error_log($e);
     }
 
-    error_log("Error: unhandled VCS $vcs");
     exit(1);
+}
+
+function loadFile($fileish, $base_path, $default_fileish) {
+    if (empty($fileish)) {
+        $fileish = $default_fileish;
+        if (!empty($base_path)) {
+            $fileish = joinPath($base_path, $fileish);
+        }
+    }
+
+    // Does it look like a url that we can handle with stream wrappers?
+    if (isUrl($fileish) && in_array(parse_url($fileish, PHP_URL_SCHEME), stream_get_wrappers())) {
+        return array(mustDecodeJson(file_get_contents($fileish), $fileish), false);
+    }
+
+    // Is it a file in the local filesystem?
+    if (file_exists($fileish)) {
+        return array(mustDecodeJson(file_get_contents($fileish), $fileish), false);
+    }
+
+    return array(false, "Candidate '$fileish' does not look loadable from the fs or php stream wrappers");
 }
 
 function isUrl($string) {
@@ -310,7 +312,7 @@ function getVcses() {
 
 function vcsDetectGit($_fileish) {
     // Is there a git executable?
-    exec('git --version', null, $exit);
+    exec('sh -c "git --version" > /dev/null 2>&1', $_out, $exit);
     if ($exit !== 0) return array(false, "'git --version' exited with non-zero code '$exit'");
 
     // Does this look like a git repo?
@@ -341,7 +343,7 @@ function vcsLoadGit($fileish, $base_path, $_default_fileish) {
 
 function vcsDetectSvn($fileish, $base_path, $default_fileish) {
     // Is there a git executable?
-    exec('svn --version', null, $exit);
+    exec('sh -c "svn --version" > /dev/null 2>&1', $_out, $exit);
     if ($exit !== 0) return array(false, "'svn --version' exited with non-zero code '$exit'");
 
     if (strpos('svn://', $fileish) === 0) {
@@ -428,13 +430,15 @@ function parseOpts() {
         usage();
     }
 
-    $path = array_key_exists('path', $given) ? $given['path'] : '';
-    $vcs  = array_key_exists('vcs', $given) ? strtolower($given['vcs']) : vcsDetect($path);
-    $defaultFrom = $vcs == 'svn' ? "BASE" : "HEAD";
+    $vcs = array_key_exists('vcs', $given) ? $given['vcs'] : '';
+    if ($vcs && !function_exists('vcsLoad' . ucfirst($vcs))) {
+        error_log("Unsupported vcs '$vcs'\n");
+        usage();
+    }
 
     return array(
-        'path' => $path,
-        'from' => array_key_exists('from', $given) ? $given['from'] : $defaultFrom,
+        'path' => array_key_exists('path', $given) ? $given['path'] : '',
+        'from' => array_key_exists('from', $given) ? $given['from'] : '',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
         'md' => array_key_exists('md', $given),
         'json' => array_key_exists('json', $given),
@@ -446,42 +450,8 @@ function parseOpts() {
     );
 }
 
-function dirnameSafe($path) {
-    $parent = dirname($path);
-    return ($parent != $path && !empty($parent)) ? $parent : false;
-}
-
-function joinPath(/* path parts */) {
-    return implode(DIRECTORY_SEPARATOR, array_map(function($part) {
-        return trim($part, DIRECTORY_SEPARATOR);
-    }, func_get_args()));
-}
-
-function vcsDetect($base_path) {
-    if (empty($base_path)) {
-        $base_path = '.';
-    }
-
-    // > Trailing delimiters, such as \ and /, are also removed
-    // > returns false on failure, e.g. if the file does not exist.
-    $base_path = realpath($base_path);
-    if ($base_path === false) return 'unknown';
-
-    $tries = 10;
-    do {
-        if(is_dir(joinPath($base_path, '.git'))) {
-            return 'git';
-        } elseif(is_dir(joinPath($base_path, '.svn'))) {
-            return 'svn';
-        }
-
-        $base_path = dirnameSafe($base_path);
-    } while($base_path !== false && --$tries > 0);
-
-    return 'unknown';
-}
-
 function usage() {
+    $vcses = implode(', ', getVcses());
     print <<<EOF
 Usage: composer-lock-diff [options]
 
@@ -489,8 +459,8 @@ Options:
   -h --help    Print this message
   --path, -p   Base to with which to prefix paths. Default "./"
                E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
-  --from       The file, git ref, or git ref with filename to compare from 
-               (git : HEAD:composer.lock, svn: composer.lock@BASE)
+  --from       The file, git ref, or git ref with filename to compare from
+               (git: HEAD:composer.lock, svn: composer.lock@BASE)
   --to         The file, git ref, or git ref with filename to compare to (composer.lock)
   --json       Format output as JSON
   --pretty     Pretty print JSON output (PHP >= 5.4.0)
@@ -498,7 +468,7 @@ Options:
   --no-links   Don't include Compare links in plain text or any links in markdown
   --only-prod  Only include changes from `packages`
   --only-dev   Only include changes from `packages-dev`
-  --vcs        Force vcs (git, svn, ...). Default auto-detect from path
+  --vcs        Force vcs ($vcses). Default: attempt to auto-detect
 
 EOF;
 
