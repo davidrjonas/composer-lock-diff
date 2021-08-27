@@ -298,8 +298,8 @@ function formatCompareGitlab($url, $from, $to) {
 }
 
 function formatCompareDrupal($url, $from, $to) {
-  $url = preg_replace('/\.git$/', '', $url);
-  return sprintf('%s/compare/8.x-%s...8.x-%s', $url, substr(urlencode($from), 0, -2), substr(urlencode($to), 0, -2));
+  // Drupalcode uses self-hosted Gitlab now
+  return formatCompareGitlab($url, $from, $to);
 }
 
 //
