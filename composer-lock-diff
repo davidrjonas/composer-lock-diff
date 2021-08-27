@@ -416,6 +416,10 @@ function joinPath(/* path parts */) {
     }, func_get_args()));
 }
 
+function ensureTrailingPathSep($path) {
+  return trim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+}
+
 function parseOpts() {
     $given = getopt('hp:', array('path:', 'from:', 'to:', 'md', 'json', 'pretty', 'no-links', 'only-prod', 'only-dev', 'help', 'vcs:'));
 
@@ -437,7 +441,7 @@ function parseOpts() {
     }
 
     return array(
-        'path' => array_key_exists('path', $given) ? $given['path'] : '',
+        'path' => array_key_exists('path', $given) ? ensureTrailingPathSep($given['path']) : '',
         'from' => array_key_exists('from', $given) ? $given['from'] : '',
         'to' => array_key_exists('to', $given) ? $given['to'] : '',
         'md' => array_key_exists('md', $given),
