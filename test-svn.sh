@@ -5,14 +5,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 svn --help > /dev/null || { echo "Fail: could not find 'svn' executable"; exit 1; }
 svnadmin --help > /dev/null || { echo "Fail: could not find 'svnadmin' executable"; exit 1; }
 
-trap cleanup INT
+trap cleanup INT ERR
 
 function cleanup() {
   cd "$DIR/test-data"
   rm -rf proj proj-working svnrepo
 }
 
-set -ex
+set -eEx
 
 cd test-data
 
@@ -32,7 +32,7 @@ cd proj-working/trunk
 ../../../composer-lock-diff
 
 cd ..
-../../composer-lock-diff -p trunk/
+../../composer-lock-diff -p trunk
 
 cd ..
 rm -rf proj proj-working svnrepo
