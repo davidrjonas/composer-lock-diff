@@ -346,7 +346,7 @@ function vcsDetectSvn($fileish, $base_path, $default_fileish) {
     exec('sh -c "svn --version" > /dev/null 2>&1', $_out, $exit);
     if ($exit !== 0) return array(false, "'svn --version' exited with non-zero code '$exit'");
 
-    if (strpos('svn://', $fileish) === 0) {
+    if (strpos($fileish, 'svn://') === 0) {
         return array(true, false);
     }
 
