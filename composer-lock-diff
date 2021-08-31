@@ -411,9 +411,17 @@ function dirnameSafe($path) {
 }
 
 function joinPath(/* path parts */) {
-    return implode(DIRECTORY_SEPARATOR, array_map(function($part) {
+    $args = func_get_args();
+    $head = $args[0];
+    $lead = '';
+
+    if ($head[0] == DIRECTORY_SEPARATOR) {
+      $lead = DIRECTORY_SEPARATOR;
+    }
+
+    return $lead . implode(DIRECTORY_SEPARATOR, array_map(function($part) {
         return trim($part, DIRECTORY_SEPARATOR);
-    }, func_get_args()));
+    }, $args));
 }
 
 function ensureTrailingPathSep($path) {
