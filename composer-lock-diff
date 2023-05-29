@@ -294,7 +294,7 @@ function formatCompareGitlab($url, $from, $to) {
         $url = preg_replace('/^git@(gitlab\.[^:]+):/', 'https://$1/', $url);
     }
     $url = preg_replace('/\.git$/', '', $url);
-    return sprintf('%s/compare/%s...%s', $url, urlencode($from), urlencode($to));
+    return sprintf('%s/-/compare/%s...%s', $url, urlencode($from), urlencode($to));
 }
 
 function formatCompareDrupal($url, $from, $to) {
