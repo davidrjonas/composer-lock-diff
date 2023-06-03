@@ -47,12 +47,12 @@ function diff($key, $data_from, $data_to) {
     $pkgs = array();
 
     foreach($data_from->$key as $pkg) {
-        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
+        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '', array('direct' => property_exists($pkg, 'direct')));
     }
 
     foreach($data_to->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
-            $pkgs[$pkg->name] = array('NEW', version($pkg), '');
+            $pkgs[$pkg->name] = array('NEW', version($pkg), '', array('direct' => property_exists($pkg, 'direct')));
             continue;
         }
 
@@ -61,6 +61,9 @@ function diff($key, $data_from, $data_to) {
         } else {
             $pkgs[$pkg->name][1] = version($pkg);
             $pkgs[$pkg->name][2] = makeCompareUrl($pkg, $pkgs);
+            if ($pkgs[$pkg->name][3]['direct'] === false) { // Don't overwrite direct if it was already set to true
+                $pkgs[$pkg->name][3]['direct'] = property_exists($pkg, 'direct');
+            }
         }
     }
 
@@ -101,7 +104,7 @@ function tableize($header, $data, $opts = array()) {
 
     $widths = array(maxLength(array_merge(array($header), array_keys($data))));
 
-    $count = count(reset($data));
+    $count = 3; // it will always be 3. The fourth item is a properties array
     for($i = 0; $i < $count; $i++) {
         $widths[] = max(strlen($titles[$i + 1]), maxLength(array_map(function($k) use ($data, $i) { return $data[$k][$i]; }, array_keys($data))));
     }
@@ -113,8 +116,18 @@ function tableize($header, $data, $opts = array()) {
     $lines[] = tabelizeLine($titles, $widths);
     $lines[] = separatorLine($widths, $opts['joint']);
 
+    $lines[] = fillLine(array("Direct"), '~', $widths);
+
     foreach($data as $key => $v) {
-        $lines[] = tabelizeLine(array_merge(array($key), $v), $widths);
+        if (! $v[3]['direct']) continue;
+        $lines[] = tabelizeLine(array_merge(array($key), array_slice($v, 0, $count)), $widths);
+    }
+
+    $lines[] = fillLine(array("Indirect"), '~', $widths);
+
+    foreach($data as $key => $v) {
+        if ($v[3]['direct']) continue;
+        $lines[] = tabelizeLine(array_merge(array($key), array_slice($v, 0, $count)), $widths);
     }
 
     if ($opts['capped']) {
@@ -130,6 +143,19 @@ function separatorLine($widths, $joint) {
 
 function maxLength(array $array) {
     return max(array_map('strlen', $array));
+}
+
+function fillLine($data, $fill_char, $widths) {
+    $count = count($data);
+    for ($i = 0; $i < count($widths); $i++) {
+        if ($i < $count) {
+            $data[$i] = $fill_char . " " . $data[$i] . " " . str_repeat($fill_char, $widths[$i] - (strlen($data[$i]) + 3));
+        } else {
+            $data[$i] = str_repeat($fill_char, $widths[$i]);
+        }
+    }
+
+    return tabelizeLine($data, $widths);
 }
 
 function tabelizeLine($data, $widths) {
@@ -209,11 +235,20 @@ function loadFile($fileish, $base_path, $default_fileish) {
     }
 
     // Is it a file in the local filesystem?
-    if (file_exists($fileish)) {
-        return array(mustDecodeJson(file_get_contents($fileish), $fileish), false);
+    if (! file_exists($fileish)) {
+        return array(false, "Candidate '$fileish' does not look loadable from the fs or php stream wrappers");
     }
 
-    return array(false, "Candidate '$fileish' does not look loadable from the fs or php stream wrappers");
+    $data = mustDecodeJson(file_get_contents($fileish), $fileish);
+
+    // Try to load composer.json and mark deps.
+    if (substr($fileish, -4) == "lock") {
+        $composer_json_fileish = substr($fileish, 0, -4) . 'json';
+        $composer_json = mustDecodeJson(file_get_contents($composer_json_fileish), $composer_json_fileish);
+        markDirectDependencies($data, $composer_json);
+    }
+
+    return array($data, false);
 }
 
 function isUrl($string) {
@@ -229,6 +264,26 @@ function mustDecodeJson($json, $context) {
     }
 
     return $data;
+}
+
+function markDirectDependencies($lock, $json) {
+    foreach (array('', '-dev') as $ext) {
+        foreach ($json->{'require'.$ext} as $pkg => $_) {
+            $packages = 'packages'.$ext;
+
+            $index = false;
+            for($i = 0; $i < count($lock->{$packages}); $i++) {
+                if ($lock->{$packages}[$i]->name == $pkg) {
+                    $index = $i;
+                    break;
+                }
+            }
+
+            if ($index !== false) {
+                $lock->{$packages}[$i]->direct = true;
+            }
+        }
+    }
 }
 
 function makeCompareUrl($pkg, $diff) {
