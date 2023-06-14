@@ -47,12 +47,12 @@ function diff($key, $data_from, $data_to) {
     $pkgs = array();
 
     foreach($data_from->$key as $pkg) {
-        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '');
+        $pkgs[$pkg->name] = array(version($pkg), 'REMOVED', '', reference($pkg));
     }
 
     foreach($data_to->$key as $pkg) {
         if (! array_key_exists($pkg->name, $pkgs)) {
-            $pkgs[$pkg->name] = array('NEW', version($pkg), '');
+            $pkgs[$pkg->name] = array('NEW', version($pkg), '', reference($pkg));
             continue;
         }
 
@@ -60,9 +60,16 @@ function diff($key, $data_from, $data_to) {
             unset($pkgs[$pkg->name]);
         } else {
             $pkgs[$pkg->name][1] = version($pkg);
+            $pkgs[$pkg->name][4] = reference($pkg);
             $pkgs[$pkg->name][2] = makeCompareUrl($pkg, $pkgs);
         }
     }
+
+    foreach ($pkgs as &$pkg) {
+      // Remove the extra references.
+      unset($pkg[3], $pkg[4]);
+    }
+    unset($pkg);
 
     return $pkgs;
 }
@@ -76,6 +83,17 @@ function version($pkg)
     }
 
     return $version;
+}
+
+function reference($pkg)
+{
+  if (isset($pkg->source->reference)) {
+    if (!preg_match('{^[0-9a-f]{40}$}', $pkg->source->reference)) {
+      // Not a commit hash, use it.
+      return $pkg->source->reference;
+    }
+  }
+  return version($pkg);
 }
 
 function tableize($header, $data, $opts = array()) {
@@ -233,7 +251,9 @@ function mustDecodeJson($json, $context) {
 
 function makeCompareUrl($pkg, $diff) {
     $func = 'formatCompare' . ucfirst(getSourceRepoType((string) @$pkg->source->url));
-    return call_user_func($func, @$pkg->source->url, $diff[$pkg->name][0], $diff[$pkg->name][1]);
+    $from_version = $diff[$pkg->name][3];
+    $to_version = $diff[$pkg->name][4];
+    return call_user_func($func, @$pkg->source->url, $from_version, $to_version);
 }
 
 function getSourceRepoType($url) {
