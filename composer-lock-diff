@@ -318,7 +318,13 @@ function formatCompareGitlab($url, $from, $to) {
 }
 
 function formatCompareDrupal($url, $from, $to) {
-  // Drupalcode uses self-hosted Gitlab now
+  // Drupalcode uses self-hosted Gitlab now.
+  if (strpos($url, 'http') === false) {
+    $url = preg_replace('/^git@(git\.[^:]+):/', 'https://$1/', $url);
+    // git.drupal.org automatically redirects to git.drupalcode.org anyway,
+    // but might as well save the roundtrip.
+    $url = str_replace('://git.drupal.org/', '://git.drupalcode.org/', $url);
+  }
   return formatCompareGitlab($url, $from, $to);
 }
 
