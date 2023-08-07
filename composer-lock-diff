@@ -328,6 +328,17 @@ function vcsLoadGit($fileish, $base_path, $_default_fileish) {
     }
 
     if (strpos($fileish, ':') === false) {
+        if (empty($base_path)) {
+            // Resolve from the relative directory.
+            $git_dir = findUp('.', '.git');
+            if ($git_dir) {
+                $project_dir = dirname($git_dir) . DIRECTORY_SEPARATOR;
+                $current_working_dir = getcwd();
+                if (substr( $current_working_dir, 0, strlen($project_dir)) === $project_dir) {
+                    $base_path = substr($current_working_dir, strlen($project_dir)) . DIRECTORY_SEPARATOR;
+                }
+            }
+        }
         $fileish .= ':' . $base_path . 'composer.lock';
     }
 
