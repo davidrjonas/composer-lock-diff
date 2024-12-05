@@ -279,6 +279,9 @@ function mustDecodeJson($json, $context) {
 
 function markDirectDependencies($lock, $json) {
     foreach (array('', '-dev') as $ext) {
+        if (!isset($json->{'require'.$ext})) {
+            continue;
+        }
         foreach ($json->{'require'.$ext} as $pkg => $_) {
             $packages = 'packages'.$ext;
 
