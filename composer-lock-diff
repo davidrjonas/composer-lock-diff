@@ -468,8 +468,8 @@ function usage() {
 Usage: composer-lock-diff [options]
 
 Options:
-  -h --help    Print this message
-  --path, -p   Base to with which to prefix paths. Default "./"
+  -h, --help   Print this message
+  -p, --path   Base to with which to prefix paths. Default "./"
                E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
   --from       The file, git ref, or git ref with filename to compare from
                (git: HEAD:composer.lock, svn: composer.lock@BASE)
