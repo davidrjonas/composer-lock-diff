@@ -1,9 +1,10 @@
 OPTS ?= ""
+PHP = php
 
 all: test md no-links only-dev only-prod json json-pretty
 
 test:
-	php ./composer-lock-diff --from test-data/composer.from.lock --to test-data/composer.to.lock $(OPTS)
+	$(PHP) ./composer-lock-diff --from test-data/composer.from.lock --to test-data/composer.to.lock $(OPTS)
 
 md:
 	$(MAKE) test OPTS=--md
