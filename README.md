@@ -38,16 +38,18 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 
 ### Options
 
-- `--path, -p`: Base to with which to prefix paths. Default "./"
-- `--from`: The file^, git ref, or git ref with filename to compare from (HEAD:composer.lock)
+- `-h, --help`: Print this message
+- `-p, --path`: Base to with which to prefix paths. Default "./"  
+  E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
+- `--from`: The file^, git ref, or git ref with filename to compare from (git: HEAD:composer.lock, svn: composer.lock@BASE)
 - `--to`: The file^, git ref, or git ref with filename to compare to (composer.lock)
-- `--md`: Markdown table output
-- `--json`: json output
-- `--pretty`: pretty output when combined with `--json` (>=5.4 only)
+- `--json`: Format output as JSON
+- `--pretty`: Pretty print JSON output (PHP >= 5.4.0)
+- `--md`: Use markdown instead of plain text
 - `--no-links`: Don't include Compare links in plain text or any links in markdown
 - `--only-prod`: Only include changes from `packages`
 - `--only-dev`: Only include changes from `packages-dev`
-- `--vcs`: Force vcs (git, svn, ...). Default auto-detect from path
+- `--vcs`: Force vcs (git, svn, ...). Default: attempt to auto-detect
 
 ^ File includes anything available as a [protocol stream wrapper](http://php.net/manual/en/wrappers.php) such as URLs.
 
