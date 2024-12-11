@@ -16,7 +16,7 @@ if (! $opts['only-prod']) {
 }
 
 if ($opts['json']) {
-    $json_opts = ($opts['pretty']) ? JSON_PRETTY_PRINT : 0;
+    $json_opts = ($opts['pretty']) ? JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT : 0;
     echo json_encode($changes, $json_opts), PHP_EOL;
     return;
 }
