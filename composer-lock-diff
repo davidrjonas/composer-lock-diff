@@ -16,8 +16,8 @@ if (! $opts['only-prod']) {
 }
 
 if ($opts['json']) {
-    $json_opts = ($opts['pretty']) ? JSON_PRETTY_PRINT : 0;
-    print json_encode($changes, $json_opts);
+    $json_opts = ($opts['pretty']) ? JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT : 0;
+    echo json_encode($changes, $json_opts), PHP_EOL;
     return;
 }
 
@@ -69,7 +69,7 @@ function diff($key, $data_from, $data_to) {
 
 function version($pkg)
 {
-    if((substr($pkg->version,0,4) == 'dev-' || '-dev' === substr($pkg->version, -4)) && isset($pkg->source) && isset($pkg->source->reference)) {
+    if((substr($pkg->version,0,4) == 'dev-' || '-dev' === substr($pkg->version, -4)) && isset($pkg->source->reference)) {
         $version = substr($pkg->source->reference,0,7) ?: '';
     } else {
         $version = (string) $pkg->version;
@@ -444,8 +444,8 @@ function parseOpts() {
 
     $vcs = array_key_exists('vcs', $given) ? $given['vcs'] : '';
     if ($vcs && !function_exists('vcsLoad' . ucfirst($vcs))) {
-        error_log("Unsupported vcs '$vcs'\n");
-        usage();
+        error_log(sprintf("Unsupported VCS '$vcs'; supported are: '%s'\n", implode("', '", getVcses())));
+        usage(1);
     }
 
     return array(
@@ -462,14 +462,14 @@ function parseOpts() {
     );
 }
 
-function usage() {
+function usage($status = 0) {
     $vcses = implode(', ', getVcses());
-    print <<<EOF
+    $help = <<<EOF
 Usage: composer-lock-diff [options]
 
 Options:
-  -h --help    Print this message
-  --path, -p   Base to with which to prefix paths. Default "./"
+  -h, --help   Print this message
+  -p, --path   Base to with which to prefix paths. Default "./"
                E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
   --from       The file, git ref, or git ref with filename to compare from
                (git: HEAD:composer.lock, svn: composer.lock@BASE)
@@ -480,11 +480,16 @@ Options:
   --no-links   Don't include Compare links in plain text or any links in markdown
   --only-prod  Only include changes from `packages`
   --only-dev   Only include changes from `packages-dev`
-  --vcs        Force vcs ($vcses). Default: attempt to auto-detect
-
+  --vcs        Force VCS ($vcses). Default: attempt to auto-detect
 EOF;
 
-    exit(0);
+    if ($status) {
+        error_log($help);
+    } else {
+        echo $help, "\n";
+    }
+
+    exit($status);
 }
 # vim: ff=unix ts=4 ss=4 sr et
 

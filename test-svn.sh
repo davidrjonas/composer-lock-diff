@@ -1,6 +1,7 @@
 #!/bin/bash
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+DIR="$( CDPATH='' cd -- "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+[ "$DIR" ] || exit
 
 svn --help > /dev/null || { echo "Fail: could not find 'svn' executable"; exit 1; }
 svnadmin --help > /dev/null || { echo "Fail: could not find 'svnadmin' executable"; exit 1; }
@@ -8,7 +9,7 @@ svnadmin --help > /dev/null || { echo "Fail: could not find 'svnadmin' executabl
 trap cleanup INT ERR
 
 function cleanup() {
-  cd "$DIR/test-data"
+  cd "$DIR/test-data" || exit
   rm -rf proj proj-working svnrepo
 }
 
