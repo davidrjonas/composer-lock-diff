@@ -12,5 +12,7 @@ tags.*
 .Trashes
 ehthumbs.db
 Thumbs.db
+/composer.lock
 /test-project
 /test-data/vendor
+/vendor/
