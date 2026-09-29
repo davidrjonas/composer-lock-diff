@@ -71,6 +71,29 @@ class GitTest extends TestCase
         );
     }
 
+    public function testGitSubdirInSubdir()
+    {
+        $tmpDir = __DIR__ . '/tmp';
+        mkdir($tmpDir . '/subdir', 0777, true);
+        copy(__DIR__ . '/locks/base/composer.from.json', $tmpDir . '/subdir/composer.json');
+        copy(__DIR__ . '/locks/base/composer.from.lock', $tmpDir . '/subdir/composer.lock');
+
+        chdir($tmpDir);
+        $this->exec('git init --initial-branch=main');
+        $this->exec('git add subdir/composer.*');
+        $this->exec('git commit -m "Initial commit"');
+
+        copy(__DIR__ . '/locks/base/composer.to.json', $tmpDir . '/subdir/composer.json');
+        copy(__DIR__ . '/locks/base/composer.to.lock', $tmpDir . '/subdir/composer.lock');
+
+        chdir($tmpDir . '/subdir');
+        $output = $this->execAndReturn('../../../composer-lock-diff');
+        $this->assertStringEqualsFile(
+            __DIR__ . '/expected/defaultOutput.txt',
+            $output
+        );
+    }
+
     protected function execAndReturn($command): string
     {
         $lastLine = exec($command . ' 2>&1', $lines, $exitCode);
