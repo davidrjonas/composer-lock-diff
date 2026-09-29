@@ -1,0 +1,16 @@
+Usage: composer-lock-diff [options]
+
+Options:
+  -h, --help   Print this message
+  -p, --path   Base to with which to prefix paths. Default "./"
+               E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
+  --from       The file, git ref, or git ref with filename to compare from
+               (git: HEAD:composer.lock, svn: composer.lock@BASE)
+  --to         The file, git ref, or git ref with filename to compare to (composer.lock)
+  --json       Format output as JSON
+  --pretty     Pretty print JSON output (PHP >= 5.4.0)
+  --md         Use markdown instead of plain text
+  --no-links   Don't include Compare links in plain text or any links in markdown
+  --only-prod  Only include changes from `packages`
+  --only-dev   Only include changes from `packages-dev`
+  --vcs        Force VCS (git, svn). Default: attempt to auto-detect

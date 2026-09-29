@@ -39,7 +39,7 @@ Or from vim, to insert the output into the commit message, type `:r!composer-loc
 ### Options
 
 - `-h, --help`: Print this message
-- `-p, --path`: Base to with which to prefix paths. Default "./"  
+- `-p, --path`: Base to with which to prefix paths. Default "./"
   E.g. `-p app` would look for HEAD:app/composer.lock and app/composer.lock
 - `--from`: The file^, git ref, or git ref with filename to compare from (git: HEAD:composer.lock, svn: composer.lock@BASE)
 - `--to`: The file^, git ref, or git ref with filename to compare to (composer.lock)
@@ -118,23 +118,23 @@ The [Makefile](Makefile) has some test cases. Run `make | less` and inspect the 
 To run using the test data manually simply point the `--to` and `--from` args at the lock files,
 
 ```php
-php ./composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock
+php ./composer-lock-diff --from ./tests/locks/base/composer.from.lock --to ./tests/locks/base/composer.to.lock
 ```
 
 Docker is very helpful for targeting a specific version of php and/or composer,
 
 ```php
 docker run --rm -it -v "$PWD":/src -w /src php:7.4.2 \
-  php ./composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock
+  php ./composer-lock-diff --from ./tests/locks/base/composer.from.lock --to ./tests/locks/base/composer.to.lock
 ```
 
-Sometimes you want to test the git related functions. To do that first I make a temporary repo. Then I copy into it `test-data/composer.from.lock` as `composer.lock` to set the previous state and `test-data/composer.to.json` as `composer.json` for the future state. I commit those then run `composer-lock-diff` with the options I want to test and visually inspect the results.
+Sometimes you want to test the git related functions. To do that first I make a temporary repo. Then I copy into it `tests/locks/base/composer.from.lock` as `composer.lock` to set the previous state and `tests/locks/base/composer.to.json` as `composer.json` for the future state. I commit those then run `composer-lock-diff` with the options I want to test and visually inspect the results.
 
 ```bash
 mkdir tmp && cd tmp
 git init
-cp ../test-data/composer.to.json composer.json
-cp ../test-data/composer.from.lock composer.lock
+cp ../tests/locks/base/composer.to.json composer.json
+cp ../tests/locks/base/composer.from.lock composer.lock
 git add .
 git commit -m "initial"
 
@@ -155,42 +155,27 @@ php ../composer.phar update
 php ../composer-lock-diff
 ```
 
-Add a test case to test-data/
+Add a test case to tests/locks/base/
 -----------------------------
 
 - Make a new, temporary git repo in `./tmp`
-- Copy `../test-data/composer.from.json` as `composer.json` and `../test-data/composer.from.lock` as `composer.lock`.
+- Copy `../tests/locks/base/composer.from.json` as `composer.json` and `../tests/locks/base/composer.from.lock` as `composer.lock`.
 - Commit them.
 - Run `composer install`
 - Add your _pre_ case to `composer.json`. Use an exact version.
 - Run `composer update`.
-- The generated `composer.lock` should look similar to `../test-data/composer.from.lock` but there will be differences due to transient dependencies. No real way around that. Use `composer-lock-diff` to make sure none of the named packages change versions and your new case is there.
-- Copy `composer.json` to `../test-data/composer.from.json` and `composer.lock` to `composer.from.lock`.
-- Copy `../test-data/composer.to.json` as `composer.json`.
+- The generated `composer.lock` should look similar to `../tests/locks/base/composer.from.lock` but there will be differences due to transient dependencies. No real way around that. Use `composer-lock-diff` to make sure none of the named packages change versions and your new case is there.
+- Copy `composer.json` to `../tests/locks/base/composer.from.json` and `composer.lock` to `composer.from.lock`.
+- Copy `../tests/locks/base/composer.to.json` as `composer.json`.
 - Add your _post_ case to `composer.json`. Again, exact versions are best.
 - Generate a new lock file.
 - Use composer-lock-diff to test your feature.
-- When you're happy with it, copy `composer.json` to `../test-data/composer.to.json` and `composer.lock` to `../test-data/composer.to.lock`.
+- When you're happy with it, copy `composer.json` to `../tests/locks/base/composer.to.json` and `composer.lock` to `../tests/locks/base/composer.to.lock`.
 
 Test Cases
 ----------
 
-See [Makefile](Makefile).
-
-- `comopser-lock-diff` # no args
-- `composer-lock-diff --from ./test-data/composer.from.lock --to ./test-data/composer.to.lock`
-- `composer-lock-diff --path ./test-data/`
-- `composer-lock-diff --from <git ref>` # this gets tested with 'no args'
-- `composer-lock-diff --from <git ref with filename>`
-- `composer-lock-diff --to <git ref>`
-- `composer-lock-diff --to <git ref with filename>`
-- `composer-lock-diff --only-dev`
-- `composer-lock-diff --only-prod`
-- `composer-lock-diff --no-links`
-- `composer-lock-diff --json`
-- `composer-lock-diff --json --pretty`
-- `composer-lock-diff --md`
-- `composer-lock-diff --md --no-links`
+Run `phpunit tests/`.
 
 If anyone can help test with Windows that would be very much appreciated!
 
@@ -209,4 +194,3 @@ Thanks to everyone who has shared ideas and code! In particular,
 - https://github.com/jibran
 - https://github.com/soleuu
 - https://github.com/stof
-

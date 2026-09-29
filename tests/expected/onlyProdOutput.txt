@@ -1,0 +1,30 @@
++-----------------------------+--------+---------+-------------------------------------------------------------------------------------------------+
+| Production Changes          | From   | To      | Compare                                                                                         |
++-----------------------------+--------+---------+-------------------------------------------------------------------------------------------------+
+| caseysoftware/marvel-helper | 1.1.2  | 2.0.0   | https://gitlab.com/CaseySoftware/marvel-php/-/compare/1.1.2...2.0.0                             |
+| doctrine/dbal               | 2.2.0  | v2.9.2  | https://github.com/doctrine/dbal/compare/2.2.0...v2.9.2                                         |
+| ircmaxell/random-lib        | v1.1.0 | v1.2.0  | https://github.com/ircmaxell/RandomLib/compare/v1.1.0...v1.2.0                                  |
+| ircmaxell/security-lib      | 1.0.0  | v1.1.0  | https://github.com/ircmaxell/SecurityLib/compare/1.0.0...v1.1.0                                 |
+| monolog/monolog             | 1.10.0 | 895066e | https://github.com/Seldaek/monolog/compare/1.10.0...895066e                                     |
+| payintegrator/afterpay      | 1.5.0  | 2.0.0   | https://bitbucket.org/afterpay-plugins/afterpay-composer-package/branches/compare/2.0.0%0D1.5.0 |
+| pmjones/fake                | 0.0.1  | 0.2.0   | https://gitlab.com/pmjones/fake/-/compare/0.0.1...0.2.0                                         |
++-----------------------------+--------+---------+-------------------------------------------------------------------------------------------------+
+
++------------------------------------+--------+---------+-----------------------------------------------------------+
+| Indirect Production Changes        | From   | To      | Compare                                                   |
++------------------------------------+--------+---------+-----------------------------------------------------------+
+| doctrine/common                    | 2.2.3  | REMOVED |                                                           |
+| guzzle/guzzle                      | v3.7.4 | REMOVED |                                                           |
+| guzzlehttp/guzzle                  | 6.2.3  | 6.5.5   | https://github.com/guzzle/guzzle/compare/6.2.3...6.5.5    |
+| guzzlehttp/promises                | v1.3.1 | 1.5.1   | https://github.com/guzzle/promises/compare/v1.3.1...1.5.1 |
+| guzzlehttp/psr7                    | 1.6.1  | 1.8.3   | https://github.com/guzzle/psr7/compare/1.6.1...1.8.3      |
+| psr/log                            | 1.1.0  | 1.1.4   | https://github.com/php-fig/log/compare/1.1.0...1.1.4      |
+| symfony/event-dispatcher           | v4.3.3 | REMOVED |                                                           |
+| symfony/event-dispatcher-contracts | v1.1.5 | REMOVED |                                                           |
+| doctrine/cache                     | NEW    | 1.12.1  |                                                           |
+| doctrine/event-manager             | NEW    | 1.1.1   |                                                           |
+| symfony/polyfill-intl-idn          | NEW    | v1.25.0 |                                                           |
+| symfony/polyfill-intl-normalizer   | NEW    | v1.25.0 |                                                           |
+| symfony/polyfill-php72             | NEW    | v1.25.0 |                                                           |
++------------------------------------+--------+---------+-----------------------------------------------------------+
+
