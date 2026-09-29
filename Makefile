@@ -1,40 +1,30 @@
 OPTS ?= ""
 PHP = php
 
-all: test test-help test-help-vcs-error md no-links only-dev only-prod json json-pretty
+all: test
 
-test:
-	$(PHP) ./composer-lock-diff --from test-data/composer.from.lock --to test-data/composer.to.lock $(OPTS)
+test: vendor
+	./vendor/bin/phpunit tests
 
-test-help:
-	$(PHP) ./composer-lock-diff --help
-
-test-help-vcs-error:
-	$(PHP) ./composer-lock-diff --vcs UNKNOWN ; test $$? -eq 1
-
-md:
-	$(MAKE) test OPTS=--md
-
-no-links:
-	$(MAKE) test OPTS=--no-links
-
-only-dev:
-	$(MAKE) test OPTS=--only-dev
-
-only-prod:
-	$(MAKE) test OPTS=--only-prod
-
-json:
-	$(MAKE) test OPTS=--json
-
-json-pretty:
-	$(MAKE) test OPTS="--json --pretty"
+vendor:
+	composer install
 
 # Regenerate the lock files from the json. This is useful when adding new
 # entries to test.
 locks:
-	rm -rf test-data/composer.from.lock test-data/vendor
+	rm -rf tests/locks/base/composer.from.lock tests/locks/base/vendor
 	cd test-data && COMPOSER=composer.from.json composer install -v
-	rm -rf test-data/composer.to.lock test-data/vendor
+	rm -rf tests/locks/base/composer.to.lock tests/locks/base/vendor
 	cd test-data && COMPOSER=composer.to.json composer install -v
-	rm -rf test-data/vendor
+	rm -rf tests/locks/base/vendor
+
+# Update the expected output files for the unit tests
+update-expected:
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock > tests/expected/defaultOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --json --pretty > tests/expected/jsonPrettyOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --md > tests/expected/markdownOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --md --no-links > tests/expected/markdownNoLinksOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --no-links > tests/expected/noLinksOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --only-dev > tests/expected/onlyDevOutput.txt
+	./composer-lock-diff --from tests/locks/base/composer.from.lock --to tests/locks/base/composer.to.lock --only-prod > tests/expected/onlyProdOutput.txt
+	./composer-lock-diff --help > tests/expected/helpOutput.txt
